@@ -1,0 +1,8 @@
+{
+  "name": "river-rat-poker",
+  "version": "0.1.0",
+  "description": "A whimsical Texas hold 'em poker game with a rat dealer.",
+  "scripts": {
+    "test": "echo 'No tests yet'"
+  }
+}

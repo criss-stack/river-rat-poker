@@ -1,0 +1,44 @@
+body {
+  background: #0b3d0b;
+  color: #fff;
+  font-family: sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 20px;
+}
+
+#table {
+  position: relative;
+  width: 600px;
+  height: 600px;
+  margin: 0 auto;
+  background: #006400;
+  border: 4px solid #3b3b3b;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.seat {
+  position: absolute;
+  width: 80px;
+  height: 40px;
+  line-height: 40px;
+  background: #fff;
+  color: #000;
+  border-radius: 5px;
+  transform: translate(-50%, -50%);
+}
+
+.rat {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 80px;
+  animation: dealer-bob 3s ease-in-out infinite;
+}
+
+@keyframes dealer-bob {
+  0%, 100% { transform: translate(-50%, -52%); }
+  50% { transform: translate(-50%, -48%); }
+}
