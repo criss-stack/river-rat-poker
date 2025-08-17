@@ -1,2 +1,1 @@
-# river-rat-poker
-🐀🎴 A whimsical browser-based poker game featuring the Rat Dealer mascot, custom cards, chips, and animations.
+> 🐀 River Rat Poker — a whimsical browser-based poker game with a cigar-puffing Rat Dealer, custom cards, and chips.
