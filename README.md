@@ -10,6 +10,7 @@ Open `index.html` in your favorite browser to see the table. You will be prompte
 
 ```bash
 npm test
+npm install
 ```
 
 Currently, there are no automated tests. The command above simply reports that tests have not been written yet.
