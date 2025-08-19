@@ -1,15 +1,76 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>River Rat Poker</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>River Rat Poker (Starter)</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="table">
-    <div id="dealer" class="rat">🐀</div>
-  </div>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🐀</span>
+      <span class="title">River Rat Poker</span>
+    </div>
+    <div class="status" id="status">Ready</div>
+  </header>
+
+  <main class="table-wrap">
+    <section class="table">
+      <!-- Community Cards -->
+      <div class="board">
+        <div class="board-label">Community</div>
+        <div class="cards" id="board"></div>
+        <div class="pot" id="pot">Pot: 0</div>
+      </div>
+
+      <!-- Seats (P0 = You) -->
+      <div class="seats">
+        <div class="seat" data-seat="1">
+          <div class="seat-name">CPU 1</div>
+          <div class="hole cards face-down" id="p1"></div>
+          <div class="stack" id="stack1">1,000</div>
+        </div>
+
+        <div class="seat" data-seat="2">
+          <div class="seat-name">CPU 2</div>
+          <div class="hole cards face-down" id="p2"></div>
+          <div class="stack" id="stack2">1,000</div>
+        </div>
+
+        <div class="seat hero" data-seat="0">
+          <div class="seat-name">You</div>
+          <div class="hole cards" id="p0"></div>
+          <div class="stack" id="stack0">1,000</div>
+        </div>
+
+        <div class="seat" data-seat="3">
+          <div class="seat-name">CPU 3</div>
+          <div class="hole cards face-down" id="p3"></div>
+          <div class="stack" id="stack3">1,000</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Controls -->
+    <section class="controls">
+      <button id="newHandBtn" class="btn">New Hand</button>
+      <button id="nextBtn" class="btn" disabled>Next Street</button>
+      <button id="showBtn" class="btn" disabled>Showdown</button>
+      <div class="note">This starter focuses on dealing + hand strength. Betting/AI hooks are stubbed in <code>script.js</code> so you can expand later.</div>
+    </section>
+
+    <!-- Log -->
+    <section class="log">
+      <div class="log-title">Dealer Log</div>
+      <div id="log" class="log-body"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>🐀 Dealer: “No cheese lost — yet.”</span>
+  </footer>
+
   <script src="script.js"></script>
 </body>
 </html>
