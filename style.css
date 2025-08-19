@@ -43,6 +43,13 @@ body{background:#0d0f10;color:#e9ecef}
 .seat-name{font-weight:700;margin-bottom:6px}
 .stack{margin-top:6px;color:var(--gold);font-weight:600}
 
+.dealer-btn{
+  display:inline-grid;place-items:center;
+  width:18px;height:18px;border-radius:50%;
+  background:var(--gold);color:#111;font-weight:900;font-size:12px;
+  margin-left:6px;vertical-align:middle;
+}
+
 .card{
   width:70px;height:100px;background:var(--card);border-radius:10px;border:1px solid #d9d9d9;
   box-shadow:0 4px 12px var(--shadow);position:relative;padding:6px;
@@ -60,7 +67,11 @@ body{background:#0d0f10;color:#e9ecef}
 }
 
 .face-down .card:not(.reveal){filter:saturate(0) brightness(0.3)}
-.controls{display:flex;gap:10px;align-items:center;margin:16px 0 8px}
+
+.controls{display:flex;gap:10px;align-items:center;margin:16px 0 8px;flex-wrap:wrap}
+.spacer{flex:1}
+.action-btns{display:flex;gap:10px}
+
 .btn{
   background:#1b2520;color:#e9ecef;border:1px solid #2c3a33;border-radius:10px;
   padding:10px 14px;font-weight:700;cursor:pointer;transition:transform .05s ease, background .2s
@@ -73,6 +84,6 @@ body{background:#0d0f10;color:#e9ecef}
 
 .log{background:#111417;border:1px solid #20252a;border-radius:12px;margin-top:12px}
 .log-title{padding:8px 12px;border-bottom:1px solid #20252a;font-weight:700}
-.log-body{max-height:180px;overflow:auto;padding:8px 12px;font-family:ui-monospace, SFMono-Regular, Menlo, monospace}
+.log-body{max-height:220px;overflow:auto;padding:8px 12px;font-family:ui-monospace, SFMono-Regular, Menlo, monospace}
 .log-line{opacity:.95;margin:2px 0}
 .footer{padding:18px;text-align:center;opacity:.7}
