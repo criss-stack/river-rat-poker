@@ -261,6 +261,47 @@ function bestOf7(two, board){
 }
 
 // ---------- Game flow ----------
+function bettingRound(street){
+  setStatus(`${street[0].toUpperCase()+street.slice(1)} betting…`);
+  document.getElementById("nextBtn").disabled = true;
+  document.getElementById("showBtn").disabled = true;
+  let betSize = 0;
+  const contributions = Array(state.players.length).fill(0);
+  const queue = state.players.map((p,i)=>!p.folded ? i : null).filter(i=>i!==null);
+  while(queue.length){
+    const idx = queue.shift();
+    const p = state.players[idx];
+    if(p.folded) continue;
+    const toCall = betSize - contributions[idx];
+    let action = "";
+    if(betSize === 0){
+      const bet = Math.min(10, p.stack);
+      betSize = contributions[idx] + bet;
+      p.stack -= bet;
+      contributions[idx] += bet;
+      state.pot += bet;
+      action = `bets ${bet}`;
+      state.players.forEach((pl,j)=>{ if(j!==idx && !pl.folded && contributions[j] < betSize && !queue.includes(j)) queue.push(j); });
+    } else {
+      if(toCall > 0 && Math.random() < 0.2){
+        p.folded = true;
+        action = "folds";
+      } else {
+        const callAmt = Math.min(toCall, p.stack);
+        p.stack -= callAmt;
+        contributions[idx] += callAmt;
+        state.pot += callAmt;
+        action = `calls ${callAmt}`;
+      }
+    }
+    logEl(`${p.name} ${action}.`);
+    render();
+  }
+  setStatus(`${street[0].toUpperCase()+street.slice(1)} betting complete.`);
+  if(street === "river"){ document.getElementById("showBtn").disabled = false; }
+  else { document.getElementById("nextBtn").disabled = false; }
+}
+
 function resetHand(){
   state.deck = buildDeck();
   state.board = [];
@@ -271,7 +312,7 @@ function resetHand(){
   });
   state.street = "preflop";
   setStatus("Preflop: cards are being dealt…");
-  document.getElementById("nextBtn").disabled = false;
+  document.getElementById("nextBtn").disabled = true;
   document.getElementById("showBtn").disabled = true;
   render();
 }
@@ -285,6 +326,7 @@ function dealHole(){
   }
   logEl("Dealer: Hole cards dealt.");
   render();
+  bettingRound("preflop");
 }
 
 function goFlop(){
@@ -296,6 +338,7 @@ function goFlop(){
   setStatus("Flop dealt.");
   logEl("Dealer: The Flop.");
   render();
+  bettingRound("flop");
 }
 
 function goTurn(){
@@ -305,6 +348,7 @@ function goTurn(){
   setStatus("Turn dealt.");
   logEl("Dealer: The Turn.");
   render();
+  bettingRound("turn");
 }
 
 function goRiver(){
@@ -314,6 +358,7 @@ function goRiver(){
   setStatus("River dealt.");
   logEl("Dealer: The River.");
   render();
+  bettingRound("river");
 }
 
 function showdown(){
@@ -340,7 +385,7 @@ function showdown(){
 function nextStreet(){
   if(state.street==="preflop"){ goFlop(); }
   else if(state.street==="flop"){ goTurn(); }
-  else if(state.street==="turn"){ goRiver(); document.getElementById("nextBtn").disabled = true; document.getElementById("showBtn").disabled = false; }
+  else if(state.street==="turn"){ goRiver(); }
 }
 
 function newHand(){
@@ -362,7 +407,6 @@ setStatus("Ready. Click ‘New Hand’ to deal.");
 /* -------------------------------------------
    Extension hooks (for you to implement next):
    - rotateDealer(), postBlinds(small, big)
-   - bettingRound(street): action queue, legal moves, pot management
    - simpleCPUDecision(handRank, potOdds)
    - animations (flip/reveal), sounds (chip, flip)
    Keep this file single-purpose; consider splitting into modules later.
