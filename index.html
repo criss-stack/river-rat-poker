@@ -22,6 +22,8 @@
         <div class="board-label">Community</div>
         <div class="cards" id="board"></div>
         <div class="pot" id="pot">Pot: 0</div>
+        <!-- Odds display -->
+        <div class="odds" id="oddsHint"></div>
       </div>
 
       <!-- Seats (P0 = You) -->
@@ -30,24 +32,34 @@
           <div class="seat-name">CPU 1</div>
           <div class="hole cards face-down" id="p1"></div>
           <div class="stack" id="stack1">1,000</div>
+          <!-- Action status display -->
+          <div class="action-status" id="action-status1"></div>
         </div>
 
         <div class="seat" data-seat="2">
           <div class="seat-name">CPU 2</div>
           <div class="hole cards face-down" id="p2"></div>
           <div class="stack" id="stack2">1,000</div>
+          <!-- Action status display -->
+          <div class="action-status" id="action-status2"></div>
         </div>
 
         <div class="seat hero" data-seat="0">
           <div class="seat-name">You</div>
           <div class="hole cards" id="p0"></div>
           <div class="stack" id="stack0">1,000</div>
+          <!-- Action status display -->
+          <div class="action-status" id="action-status0"></div>
+          <!-- Hand strength hint -->
+          <div class="hand-hint" id="handHint"></div>
         </div>
 
         <div class="seat" data-seat="3">
           <div class="seat-name">CPU 3</div>
           <div class="hole cards face-down" id="p3"></div>
           <div class="stack" id="stack3">1,000</div>
+          <!-- Action status display -->
+          <div class="action-status" id="action-status3"></div>
         </div>
       </div>
     </section>
@@ -59,6 +71,8 @@
       <button id="showBtn" class="btn" disabled>Showdown</button>
       <button id="foldBtn" class="btn" disabled>Fold</button>
       <button id="callBtn" class="btn" disabled>Call/Check</button>
+      <!-- Bet amount input -->
+      <input type="number" id="betAmount" min="1" max="10000" value="50" class="bet-input" style="width:80px; margin-right:4px;" />
       <button id="betBtn" class="btn" disabled>Bet/Raise</button>
       <div class="note">This starter focuses on dealing + hand strength. Betting/AI hooks are stubbed in <code>script.js</code> so you can expand later.</div>
     </section>
