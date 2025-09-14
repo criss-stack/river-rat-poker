@@ -8,10 +8,10 @@ const RANKS = ["2","3","4","5","6","7","8","9","T","J","Q","K","A"];
 
 const state = {
   players: [
-    { name: "You", stack: 1000, hole: [], folded: false },
-    { name: "CPU 1", stack: 1000, hole: [], folded: false },
-    { name: "CPU 2", stack: 1000, hole: [], folded: false },
-    { name: "CPU 3", stack: 1000, hole: [], folded: false },
+    { name: "You", stack: 1000, hole: [], folded: false, currentBet: 0, allIn: false },
+    { name: "CPU 1", stack: 1000, hole: [], folded: false, currentBet: 0, allIn: false },
+    { name: "CPU 2", stack: 1000, hole: [], folded: false, currentBet: 0, allIn: false },
+    { name: "CPU 3", stack: 1000, hole: [], folded: false, currentBet: 0, allIn: false },
   ],
   deck: [],
   board: [],
@@ -261,6 +261,14 @@ function bestOf7(two, board){
 }
 
 // ---------- Game flow ----------
+function resetBets(){
+  state.players.forEach(p=>{
+    p.currentBet = 0;
+    // A player remains all-in only if they have no chips left
+    p.allIn = p.stack === 0;
+  });
+}
+
 function resetHand(){
   state.deck = buildDeck();
   state.board = [];
@@ -268,7 +276,9 @@ function resetHand(){
   state.players.forEach(p=>{
     p.hole = [];
     p.folded = false;
+    p.allIn = false;
   });
+  resetBets();
   state.street = "preflop";
   setStatus("Preflop: cards are being dealt…");
   document.getElementById("nextBtn").disabled = false;
@@ -287,6 +297,48 @@ function dealHole(){
   render();
 }
 
+// Very simple betting round: players automatically call or check.
+function bettingRound(){
+  // Ensure bets start at zero for the round and refresh all-in flags
+  resetBets();
+
+  let highestBet = 0;
+  let acting = (state.dealerPos + 1) % state.players.length;
+
+  while(true){
+    const player = state.players[acting];
+    if(!player.folded && !player.allIn){
+      const toCall = highestBet - player.currentBet;
+      if(toCall > 0){
+        if(player.stack <= toCall){
+          state.pot += player.stack;
+          player.currentBet += player.stack;
+          player.stack = 0;
+          player.allIn = true;
+          logEl(`${player.name} calls all-in for ${player.currentBet}.`);
+        }else{
+          state.pot += toCall;
+          player.stack -= toCall;
+          player.currentBet += toCall;
+          logEl(`${player.name} calls ${toCall}.`);
+        }
+      }else{
+        logEl(`${player.name} checks.`);
+      }
+      highestBet = Math.max(highestBet, player.currentBet);
+    }
+
+    // Determine if another loop is required
+    const needAction = state.players.some(p=>!p.folded && !p.allIn && p.currentBet !== highestBet);
+    if(!needAction) break;
+
+    acting = (acting + 1) % state.players.length;
+  }
+
+  resetBets();
+  setPot();
+}
+
 function goFlop(){
   // burn
   state.deck.pop();
@@ -296,6 +348,7 @@ function goFlop(){
   setStatus("Flop dealt.");
   logEl("Dealer: The Flop.");
   render();
+  bettingRound();
 }
 
 function goTurn(){
@@ -305,6 +358,7 @@ function goTurn(){
   setStatus("Turn dealt.");
   logEl("Dealer: The Turn.");
   render();
+  bettingRound();
 }
 
 function goRiver(){
@@ -314,6 +368,7 @@ function goRiver(){
   setStatus("River dealt.");
   logEl("Dealer: The River.");
   render();
+  bettingRound();
 }
 
 function showdown(){
@@ -346,6 +401,7 @@ function nextStreet(){
 function newHand(){
   resetHand();
   dealHole();
+  bettingRound();
   // In a later version, rotate dealer & post blinds here
 }
 
