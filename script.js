@@ -6,18 +6,29 @@
 const SUITS = ["♠","♥","♦","♣"];
 const RANKS = ["2","3","4","5","6","7","8","9","T","J","Q","K","A"];
 
+// --- CONFIG ---
+const SMALL_BLIND = 10;
+const BIG_BLIND   = 20;
+// Fixed-limit bet sizes: preflop/flop use 1x, turn/river use 2x
+const STREET_BET_SIZES = { preflop: BIG_BLIND, flop: BIG_BLIND, turn: BIG_BLIND * 2, river: BIG_BLIND * 2 };
+const MAX_RAISES_PER_STREET = 3; // classic cap
+
 const state = {
   players: [
-    { name: "You", stack: 1000, hole: [], folded: false },
-    { name: "CPU 1", stack: 1000, hole: [], folded: false },
-    { name: "CPU 2", stack: 1000, hole: [], folded: false },
-    { name: "CPU 3", stack: 1000, hole: [], folded: false },
+    { id: 0, name: "You", stack: 1000, hole: [], folded: false, committed: 0, isHuman: true },
+    { id: 1, name: "CPU 1", stack: 1000, hole: [], folded: false, committed: 0, isHuman: false },
+    { id: 2, name: "CPU 2", stack: 1000, hole: [], folded: false, committed: 0, isHuman: false },
+    { id: 3, name: "CPU 3", stack: 1000, hole: [], folded: false, committed: 0, isHuman: false },
   ],
   deck: [],
   board: [],
   street: "idle", // idle | preflop | flop | turn | river | showdown
   pot: 0,
-  dealerPos: 0
+  buttonIdx: 0,
+  currentToAct: null,
+  lastAggressor: null,
+  raisesThisStreet: 0,
+  streetBetToCall: 0
 };
 
 // ---------- Utilities ----------
@@ -52,6 +63,21 @@ function buildDeck(){
   }
   return shuffle(d);
 }
+
+function nextIdx(i){ return (i + 1) % state.players.length; }
+function activePlayers(){ return state.players.filter(p => !p.folded && p.stack >= 0); }
+function resetStreet(){
+  state.raisesThisStreet = 0;
+  state.streetBetToCall = 0;
+  state.players.forEach(p => p.committed = 0);
+}
+function post(amount, p){
+  const pay = Math.min(amount, p.stack);
+  p.stack -= pay;
+  p.committed += pay;
+  state.pot += pay;
+}
+function log(msg){ logEl(`[RiverRat] ${msg}`); }
 
 // ---------- Rendering ----------
 function cardNode(card, faceUp=true){
@@ -260,6 +286,10 @@ function bestOf7(two, board){
   return evaluate7(all);
 }
 
+function evaluateBestHand(player, board){
+  return bestOf7(player.hole, board);
+}
+
 // ---------- Game flow ----------
 function resetHand(){
   state.deck = buildDeck();
@@ -268,6 +298,7 @@ function resetHand(){
   state.players.forEach(p=>{
     p.hole = [];
     p.folded = false;
+    p.committed = 0;
   });
   state.street = "preflop";
   setStatus("Preflop: cards are being dealt…");
@@ -320,50 +351,211 @@ function showdown(){
   state.street = "showdown";
   setStatus("Showdown!");
   document.getElementById("showBtn").disabled = true;
-  // Evaluate
-  const results = state.players.map((p,idx)=>{
-    const rank = bestOf7(p.hole, state.board);
-    return { idx, rank, name: p.name, hole: p.hole };
-  });
-  results.sort((a,b)=>compareRanks(a.rank,b.rank)).reverse();
-  // Handle ties (split pot)
-  const best = results[0].rank;
-  const winners = results.filter(r=>compareRanks(r.rank,best)===0);
-  const names = winners.map(w=>`Seat ${w.idx} (${state.players[w.idx].name})`);
-  logEl(`Winner: ${names.join(" & ")}.`);
-  names.forEach(n=>logEl(`— ${n}`));
-  // Reveal CPU cards
+
+  const alive = activePlayers();
+  if(alive.length === 1){
+    const winner = alive[0];
+    winner.stack += state.pot;
+    log(`${winner.name} wins ${state.pot} (everyone else folded).`);
+    state.pot = 0;
+    render();
+    return;
+  }
+
+  const results = alive.map(p => ({ player: p, score: evaluateBestHand(p, state.board) }));
+  results.sort((a,b)=>compareRanks(a.score,b.score)).reverse();
+  const top = results[0].score;
+  const winners = results.filter(r=>compareRanks(r.score, top)===0).map(r=>r.player);
+
+  if(winners.length === 1){
+    winners[0].stack += state.pot;
+    log(`${winners[0].name} wins ${state.pot} at showdown.`);
+  }else{
+    const share = Math.floor(state.pot / winners.length);
+    winners.forEach(w => w.stack += share);
+    log(`Split pot: ${winners.map(w=>w.name).join(" & ")}` + ` split ${state.pot} (${share} each).`);
+  }
+  state.pot = 0;
   render();
 }
 
-// ---------- Controls ----------
-function nextStreet(){
-  if(state.street==="preflop"){ goFlop(); }
-  else if(state.street==="flop"){ goTurn(); }
-  else if(state.street==="turn"){ goRiver(); document.getElementById("nextBtn").disabled = true; document.getElementById("showBtn").disabled = false; }
+function isHandOver(){
+  return activePlayers().length <= 1;
 }
 
-function newHand(){
+async function postBlinds(){
+  resetStreet();
+  state.street = "preflop";
+
+  const sbIdx = nextIdx(state.buttonIdx);
+  const bbIdx = nextIdx(sbIdx);
+  const sb = state.players[sbIdx];
+  const bb = state.players[bbIdx];
+
+  post(SMALL_BLIND, sb);
+  post(BIG_BLIND, bb);
+
+  state.streetBetToCall = BIG_BLIND;
+  state.lastAggressor = bbIdx;
+
+  state.currentToAct = nextIdx(bbIdx);
+
+  log(`${sb.name} posts SB ${SMALL_BLIND}, ${bb.name} posts BB ${BIG_BLIND}. Pot=${state.pot}`);
+}
+
+async function bettingRound(street){
+  state.street = street;
+  if(street !== "preflop") resetStreet();
+  const betSize = STREET_BET_SIZES[street];
+
+  if(street !== "preflop"){
+    state.currentToAct = nextIdx(state.buttonIdx);
+    state.lastAggressor = null;
+  }
+
+  let continueRound = true;
+
+  while(continueRound){
+    const p = state.players[state.currentToAct];
+    if(!p.folded && p.stack >= 0){
+      const action = await getAction(p, betSize);
+      applyAction(p, action, betSize);
+
+      if(action.type === "raise"){
+        state.lastAggressor = p.id;
+      }
+
+      if(isHandOver()) break;
+
+      if(actionEndsStreet()){
+        continueRound = false;
+        break;
+      }
+    }
+
+    state.currentToAct = nextIdx(state.currentToAct);
+  }
+
+  state.players.forEach(p => p.committed = 0);
+}
+
+function actionEndsStreet(){
+  const alive = activePlayers();
+  if(alive.length <= 1) return true;
+
+  const need = state.streetBetToCall;
+  const allMatched = alive.every(p => p.folded || p.committed === need);
+
+  if(state.lastAggressor == null) return allMatched;
+
+  return allMatched && state.currentToAct === state.lastAggressor;
+}
+
+async function getAction(player, betSize){
+  const toCall = state.streetBetToCall - player.committed;
+  const canRaise = state.raisesThisStreet < MAX_RAISES_PER_STREET && player.stack > toCall + betSize;
+
+  if(player.isHuman){
+    return await getHumanAction({ toCall, canRaise, betSize });
+  }else{
+    return getCpuAction({ player, toCall, canRaise, betSize });
+  }
+}
+
+function getCpuAction({ player, toCall, canRaise, betSize }){
+  const strength = Math.random();
+
+  if(toCall === 0){
+    if(canRaise && strength > 0.75) return { type: "raise" };
+    return { type: "check" };
+  }else{
+    if(strength > 0.80 && canRaise) return { type: "raise" };
+    if(strength > 0.25) return { type: "call" };
+    return { type: "fold" };
+  }
+}
+
+function getHumanAction({ toCall, canRaise, betSize }){
+  return new Promise(resolve => {
+    const opts = [];
+    if(toCall === 0) opts.push("check");
+    else opts.push("call", "fold");
+    if(canRaise) opts.push(toCall === 0 ? "bet" : "raise");
+
+    const msg = `Your move: ${opts.join("/")} (toCall=${toCall}, betSize=${betSize})`;
+    const choice = (window.prompt(msg) || "").toLowerCase();
+    if(choice === "fold")  return resolve({ type: "fold" });
+    if(choice === "call")  return resolve({ type: "call" });
+    if(choice === "check") return resolve({ type: "check" });
+    if(choice === "bet")   return resolve({ type: "raise" });
+    if(choice === "raise") return resolve({ type: "raise" });
+    resolve(toCall === 0 ? { type: "check" } : { type: "call" });
+  });
+}
+
+function applyAction(p, action, betSize){
+  const toCall = state.streetBetToCall - p.committed;
+
+  switch(action.type){
+    case "fold":
+      p.folded = true;
+      log(`${p.name} folds`);
+      break;
+    case "check":
+      log(`${p.name} checks`);
+      break;
+    case "call": {
+      const pay = Math.min(toCall, p.stack);
+      post(pay, p);
+      log(`${p.name} calls ${pay}. Pot=${state.pot}`);
+      break;
+    }
+    case "raise": {
+      if(toCall > 0){
+        const pay = Math.min(toCall + betSize, p.stack);
+        post(pay, p);
+        state.streetBetToCall += betSize;
+      }else{
+        const pay = Math.min(betSize, p.stack);
+        post(pay, p);
+        state.streetBetToCall = betSize;
+      }
+      state.raisesThisStreet += 1;
+      log(`${p.name} ${toCall > 0 ? "raises" : "bets"} to ${state.streetBetToCall}. Pot=${state.pot}`);
+      break;
+    }
+    default:
+      log(`${p.name} does nothing (BUG?)`);
+  }
+}
+
+async function startHand(){
   resetHand();
+  state.buttonIdx = nextIdx(state.buttonIdx);
   dealHole();
-  // In a later version, rotate dealer & post blinds here
+  await postBlinds();
+  await bettingRound("preflop");
+  if(isHandOver()) return showdown();
+
+  goFlop();
+  await bettingRound("flop");
+  if(isHandOver()) return showdown();
+
+  goTurn();
+  await bettingRound("turn");
+  if(isHandOver()) return showdown();
+
+  goRiver();
+  await bettingRound("river");
+  return showdown();
 }
 
+// ---------- Controls ----------
 document.getElementById("newHandBtn").addEventListener("click", ()=>{
-  newHand();
+  startHand();
 });
-document.getElementById("nextBtn").addEventListener("click", nextStreet);
 document.getElementById("showBtn").addEventListener("click", showdown);
 
 // Initial render
 render();
 setStatus("Ready. Click ‘New Hand’ to deal.");
-
-/* -------------------------------------------
-   Extension hooks (for you to implement next):
-   - rotateDealer(), postBlinds(small, big)
-   - bettingRound(street): action queue, legal moves, pot management
-   - simpleCPUDecision(handRank, potOdds)
-   - animations (flip/reveal), sounds (chip, flip)
-   Keep this file single-purpose; consider splitting into modules later.
--------------------------------------------- */
