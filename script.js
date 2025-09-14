@@ -261,6 +261,26 @@ function bestOf7(two, board){
 }
 
 // ---------- Game flow ----------
+function rotateDealer(){
+  const prev = document.querySelector('.seat.dealer');
+  if(prev) prev.classList.remove('dealer');
+  state.dealerPos = (state.dealerPos + 1) % state.players.length;
+  const seat = document.querySelector(`.seat[data-seat="${state.dealerPos}"]`);
+  if(seat) seat.classList.add('dealer');
+}
+
+function postBlinds(small, big){
+  const sbIdx = (state.dealerPos + 1) % state.players.length;
+  const bbIdx = (state.dealerPos + 2) % state.players.length;
+  const sb = Math.min(small, state.players[sbIdx].stack);
+  const bb = Math.min(big, state.players[bbIdx].stack);
+  state.players[sbIdx].stack -= sb;
+  state.players[bbIdx].stack -= bb;
+  state.pot = sb + bb;
+  logEl(`${state.players[sbIdx].name} posts small blind ${sb}.`);
+  logEl(`${state.players[bbIdx].name} posts big blind ${bb}.`);
+}
+
 function resetHand(){
   state.deck = buildDeck();
   state.board = [];
@@ -345,8 +365,9 @@ function nextStreet(){
 
 function newHand(){
   resetHand();
+  rotateDealer();
+  postBlinds(5, 10);
   dealHole();
-  // In a later version, rotate dealer & post blinds here
 }
 
 document.getElementById("newHandBtn").addEventListener("click", ()=>{
