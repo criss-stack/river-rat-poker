@@ -31,6 +31,12 @@ const logEl = (msg) => {
 
 const setStatus = (msg) => document.getElementById("status").textContent = msg;
 const setPot = () => document.getElementById("pot").textContent = `Pot: ${state.pot}`;
+function setActionButtons(disabled){
+  ["foldBtn","callBtn","betBtn"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.disabled = disabled;
+  });
+}
 
 function formatCard(c){ return `${c.rank}${c.suit}`; }
 
@@ -273,6 +279,7 @@ function resetHand(){
   setStatus("Preflop: cards are being dealt…");
   document.getElementById("nextBtn").disabled = false;
   document.getElementById("showBtn").disabled = true;
+  setActionButtons(false);
   render();
 }
 
@@ -334,6 +341,40 @@ function showdown(){
   names.forEach(n=>logEl(`— ${n}`));
   // Reveal CPU cards
   render();
+  setActionButtons(true);
+}
+
+function bettingRound(action){
+  const hero = state.players[0];
+  if(state.street === "idle"){
+    logEl("Dealer: No hand in progress.");
+    return;
+  }
+  switch(action){
+    case "fold":
+      hero.folded = true;
+      logEl(`${hero.name} folds.`);
+      setActionButtons(true);
+      break;
+    case "call":
+      logEl(`${hero.name} calls/checks.`);
+      break;
+    case "bet":
+      const amt = 50;
+      if(hero.stack >= amt){
+        hero.stack -= amt;
+        state.pot += amt;
+        logEl(`${hero.name} bets ${amt}.`);
+      } else if(hero.stack > 0){
+        state.pot += hero.stack;
+        logEl(`${hero.name} goes all-in for ${hero.stack}.`);
+        hero.stack = 0;
+      } else {
+        logEl(`${hero.name} has no chips left.`);
+      }
+      break;
+  }
+  render();
 }
 
 // ---------- Controls ----------
@@ -354,6 +395,9 @@ document.getElementById("newHandBtn").addEventListener("click", ()=>{
 });
 document.getElementById("nextBtn").addEventListener("click", nextStreet);
 document.getElementById("showBtn").addEventListener("click", showdown);
+document.getElementById("foldBtn").addEventListener("click", ()=>bettingRound("fold"));
+document.getElementById("callBtn").addEventListener("click", ()=>bettingRound("call"));
+document.getElementById("betBtn").addEventListener("click", ()=>bettingRound("bet"));
 
 // Initial render
 render();
