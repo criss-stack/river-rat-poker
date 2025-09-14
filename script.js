@@ -267,6 +267,14 @@ function bestOf7(two, board){
 }
 
 // ---------- Game flow ----------
+function resetBets(){
+  state.players.forEach(p=>{
+    p.currentBet = 0;
+    // A player remains all-in only if they have no chips left
+    p.allIn = p.stack === 0;
+  });
+}
+
 function rotateDealer(){
   const prev = document.querySelector('.seat.dealer');
   if(prev) prev.classList.remove('dealer');
