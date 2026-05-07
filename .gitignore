@@ -1,0 +1,44 @@
+# macOS and editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Dependencies and package manager caches
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+
+# Static and mobile build output
+dist/
+build/
+www/
+.next/
+.nuxt/
+.svelte-kit/
+.vite/
+
+# Native mobile wrappers, once added
+android/.gradle/
+android/app/build/
+ios/Pods/
+ios/build/
+DerivedData/
+
+# Logs and local environment
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.env
+.env.*
+!.env.example
+
+# Test and coverage output
+coverage/
+playwright-report/
+test-results/
