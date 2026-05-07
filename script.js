@@ -100,8 +100,18 @@ const els = {
   banner: document.getElementById("banner"),
   log: document.getElementById("hand-log"),
   smallBlind: document.getElementById("small-blind"),
+  smallBlindValue: document.getElementById("small-blind-value"),
+  smallBlindMinus: document.getElementById("small-blind-minus"),
+  smallBlindPlus: document.getElementById("small-blind-plus"),
   bigBlind: document.getElementById("big-blind"),
+  bigBlindValue: document.getElementById("big-blind-value"),
+  bigBlindMinus: document.getElementById("big-blind-minus"),
+  bigBlindPlus: document.getElementById("big-blind-plus"),
   betAmount: document.getElementById("bet-amount"),
+  betRange: document.getElementById("bet-range"),
+  betValue: document.getElementById("bet-value"),
+  betMinus: document.getElementById("bet-minus"),
+  betPlus: document.getElementById("bet-plus"),
   betLabel: document.getElementById("bet-label"),
   actionTitle: document.getElementById("action-title"),
   actionDetail: document.getElementById("action-detail"),
@@ -163,6 +173,14 @@ function wireEvents() {
   els.fold.addEventListener("click", () => handleHumanAction("fold"));
   els.checkCall.addEventListener("click", () => handleHumanAction("checkCall"));
   els.betRaise.addEventListener("click", () => handleHumanAction("betRaise"));
+  els.betRange.addEventListener("input", () => setBetAmount(Number(els.betRange.value)));
+  els.betMinus.addEventListener("click", () => adjustBetAmount(-Number(els.betAmount.step || game.bigBlind)));
+  els.betPlus.addEventListener("click", () => adjustBetAmount(Number(els.betAmount.step || game.bigBlind)));
+  els.smallBlindMinus.addEventListener("click", () => adjustBlind("small", -1));
+  els.smallBlindPlus.addEventListener("click", () => adjustBlind("small", 1));
+  els.bigBlindMinus.addEventListener("click", () => adjustBlind("big", -1));
+  els.bigBlindPlus.addEventListener("click", () => adjustBlind("big", 1));
+  syncBlindLabels();
 }
 
 function startHand() {
@@ -218,6 +236,44 @@ function readBlindSettings() {
   game.bigBlind = bigBlind;
   els.smallBlind.value = smallBlind;
   els.bigBlind.value = bigBlind;
+  syncBlindLabels();
+}
+
+function adjustBlind(which, delta) {
+  const currentSmall = Math.max(1, Number.parseInt(els.smallBlind.value, 10) || game.smallBlind);
+  const currentBig = Math.max(currentSmall + 1, Number.parseInt(els.bigBlind.value, 10) || game.bigBlind);
+
+  if (which === "small") {
+    const smallBlind = Math.max(1, currentSmall + delta);
+    els.smallBlind.value = smallBlind;
+    if (currentBig <= smallBlind) els.bigBlind.value = smallBlind + 1;
+  } else {
+    els.bigBlind.value = Math.max(currentSmall + 1, currentBig + delta);
+  }
+
+  readBlindSettings();
+  renderControls();
+}
+
+function syncBlindLabels() {
+  els.smallBlindValue.textContent = `$${els.smallBlind.value}`;
+  els.bigBlindValue.textContent = `$${els.bigBlind.value}`;
+}
+
+function adjustBetAmount(delta) {
+  setBetAmount(Number(els.betAmount.value) + delta);
+}
+
+function setBetAmount(value) {
+  const min = Number(els.betAmount.min) || 0;
+  const max = Number(els.betAmount.max) || STARTING_STACK;
+  const step = Number(els.betAmount.step) || game.bigBlind || 1;
+  const clamped = Math.max(min, Math.min(max, Number.isFinite(value) ? value : min));
+  const stepped = Math.round(clamped / step) * step;
+  const normalized = Math.max(min, Math.min(max, stepped));
+  els.betAmount.value = normalized;
+  els.betRange.value = normalized;
+  els.betValue.textContent = `$${normalized}`;
 }
 
 function resetBustedStacks() {
@@ -725,9 +781,17 @@ function renderControls() {
   els.betLabel.textContent = game.currentBet > 0 ? "Raise To" : "Bet Amount";
 
   const minimum = game.currentBet > 0 ? game.currentBet + game.minRaise : game.bigBlind;
+  const maximum = Math.max(minimum, player.committed + player.stack);
   els.betAmount.min = minimum;
+  els.betAmount.max = maximum;
   els.betAmount.step = game.bigBlind;
-  if (Number(els.betAmount.value) < minimum) els.betAmount.value = minimum;
+  els.betRange.min = minimum;
+  els.betRange.max = maximum;
+  els.betRange.step = game.bigBlind;
+  setBetAmount(Number(els.betAmount.value) < minimum ? minimum : Number(els.betAmount.value));
+  els.betMinus.disabled = !canBet || Number(els.betAmount.value) <= minimum;
+  els.betPlus.disabled = !canBet || Number(els.betAmount.value) >= maximum;
+  els.betRange.disabled = !canBet;
 
   els.newHand.textContent = game.awaitingNextHand ? "Next Hand" : "New Hand";
   els.actionTitle.textContent = humanTurn ? "Your action" : game.handInProgress ? "Rats are thinking" : "No hand in progress";

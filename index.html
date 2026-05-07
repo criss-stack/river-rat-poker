@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>River Rat Poker</title>
     <link rel="stylesheet" href="style.css" />
   </head>
@@ -13,17 +13,7 @@
           <p class="eyebrow">Rat-world casino hold'em</p>
           <h1>River Rat Poker</h1>
         </div>
-        <div class="settings">
-          <label>
-            Small Blind
-            <input id="small-blind" type="number" min="1" step="1" value="5" />
-          </label>
-          <label>
-            Big Blind
-            <input id="big-blind" type="number" min="2" step="1" value="10" />
-          </label>
-          <button id="new-hand-btn" class="wood-button">New Hand</button>
-        </div>
+        <button id="new-hand-btn" class="wood-button">New Hand</button>
       </header>
 
       <section class="table-stage" aria-label="River Rat poker table">
@@ -68,9 +58,17 @@
           <strong id="action-title">No hand in progress</strong>
           <span id="action-detail">Stacks persist between hands. Blinds apply when a new hand starts.</span>
         </div>
-        <div class="amount-control">
-          <label for="bet-amount" id="bet-label">Bet / Raise To</label>
-          <input id="bet-amount" type="number" min="0" step="5" value="20" />
+        <div class="amount-control" aria-label="Bet amount">
+          <div class="amount-head">
+            <label for="bet-range" id="bet-label">Bet / Raise To</label>
+            <strong id="bet-value">$20</strong>
+          </div>
+          <input id="bet-amount" type="hidden" min="0" step="5" value="20" />
+          <div class="amount-stepper">
+            <button id="bet-minus" type="button" aria-label="Decrease bet amount">-</button>
+            <input id="bet-range" type="range" min="0" max="1000" step="5" value="20" />
+            <button id="bet-plus" type="button" aria-label="Increase bet amount">+</button>
+          </div>
         </div>
         <div class="actions">
           <button id="fold-btn">Fold</button>
@@ -79,9 +77,35 @@
         </div>
       </section>
 
-      <section class="log-panel">
-        <h2>Hand Log</h2>
-        <ol id="hand-log"></ol>
+      <section class="below-table">
+        <details class="settings-panel">
+          <summary>Table Settings</summary>
+          <div class="settings">
+            <div class="blind-control">
+              <span>Small Blind</span>
+              <div>
+                <button id="small-blind-minus" type="button" aria-label="Decrease small blind">-</button>
+                <strong id="small-blind-value">$5</strong>
+                <button id="small-blind-plus" type="button" aria-label="Increase small blind">+</button>
+              </div>
+              <input id="small-blind" type="hidden" min="1" step="1" value="5" />
+            </div>
+            <div class="blind-control">
+              <span>Big Blind</span>
+              <div>
+                <button id="big-blind-minus" type="button" aria-label="Decrease big blind">-</button>
+                <strong id="big-blind-value">$10</strong>
+                <button id="big-blind-plus" type="button" aria-label="Increase big blind">+</button>
+              </div>
+              <input id="big-blind" type="hidden" min="2" step="1" value="10" />
+            </div>
+          </div>
+        </details>
+
+        <details class="log-panel" open>
+          <summary>Hand Log</summary>
+          <ol id="hand-log"></ol>
+        </details>
       </section>
     </main>
 
