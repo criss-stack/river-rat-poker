@@ -1,93 +1,89 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>River Rat Poker (Starter)</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <header class="topbar">
-    <div class="brand">
-      <span class="logo">🐀</span>
-      <span class="title">River Rat Poker</span>
-    </div>
-    <div class="status" id="status">Ready</div>
-  </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>River Rat Poker</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="top-bar">
+        <div>
+          <p class="eyebrow">Rat-world casino hold'em</p>
+          <h1>River Rat Poker</h1>
+        </div>
+        <div class="settings">
+          <label>
+            Small Blind
+            <input id="small-blind" type="number" min="1" step="1" value="5" />
+          </label>
+          <label>
+            Big Blind
+            <input id="big-blind" type="number" min="2" step="1" value="10" />
+          </label>
+          <button id="new-hand-btn" class="wood-button">New Hand</button>
+        </div>
+      </header>
 
-  <main class="table-wrap">
-    <section class="table">
-      <!-- Community Cards -->
-      <div class="board">
-        <div class="board-label">Community</div>
-        <div class="cards" id="board"></div>
-        <div class="pot" id="pot">Pot: 0</div>
-        <!-- Odds display -->
-        <div class="odds" id="oddsHint"></div>
-      </div>
+      <section class="table-stage" aria-label="River Rat poker table">
+        <div id="banner" class="banner" aria-live="polite"></div>
 
-      <!-- Seats (P0 = You) -->
-      <div class="seats">
-        <div class="seat" data-seat="1">
-          <div class="seat-name">CPU 1</div>
-          <div class="hole cards face-down" id="p1"></div>
-          <div class="stack" id="stack1">1,000</div>
-          <!-- Action status display -->
-          <div class="action-status" id="action-status1"></div>
+        <article id="seat-2" class="player-panel seat top-seat"></article>
+        <article id="seat-1" class="player-panel seat left-seat"></article>
+        <article id="seat-3" class="player-panel seat right-seat"></article>
+        <article id="seat-0" class="player-panel seat bottom-seat human-seat"></article>
+
+        <div class="dealer-character" aria-label="House dealer">
+          <img src="assets/dealer_rat/Rat_Happy.png" alt="Happy rat dealer in a vest" />
+          <span>House Dealer</span>
         </div>
 
-        <div class="seat" data-seat="2">
-          <div class="seat-name">CPU 2</div>
-          <div class="hole cards face-down" id="p2"></div>
-          <div class="stack" id="stack2">1,000</div>
-          <!-- Action status display -->
-          <div class="action-status" id="action-status2"></div>
+        <div class="poker-table">
+          <div class="felt-ripples"></div>
+          <div class="table-center">
+            <div class="pot-display">
+              <img class="pot-icon" src="assets/table/Pot.png" alt="" />
+              <div>
+                <strong id="pot-amount">$0</strong>
+                <small id="street-label">Waiting</small>
+              </div>
+            </div>
+            <div id="community-cards" class="community-cards" aria-label="Community cards"></div>
+            <div class="chip-bank" aria-label="Casino chip artwork">
+              <img src="assets/chips/Chip_1.png" alt="$1 teal pawprint chip" />
+              <img src="assets/chips/Chip_5.png" alt="$5 cheese chip" />
+              <img src="assets/chips/Chip_25.png" alt="$25 crowned rat chip" />
+              <img src="assets/chips/Chip_100.png" alt="$100 black crest chip" />
+              <img src="assets/chips/Chip_500.png" alt="$500 royal rat chip" />
+            </div>
+            <div id="turn-info" class="turn-info">Press New Hand to sit down.</div>
+          </div>
         </div>
+      </section>
 
-        <div class="seat hero" data-seat="0">
-          <div class="seat-name">You</div>
-          <div class="hole cards" id="p0"></div>
-          <div class="stack" id="stack0">1,000</div>
-          <!-- Action status display -->
-          <div class="action-status" id="action-status0"></div>
-          <!-- Hand strength hint -->
-          <div class="hand-hint" id="handHint"></div>
+      <section class="action-bar" aria-label="Player actions">
+        <div class="action-summary">
+          <strong id="action-title">No hand in progress</strong>
+          <span id="action-detail">Stacks persist between hands. Blinds apply when a new hand starts.</span>
         </div>
-
-        <div class="seat" data-seat="3">
-          <div class="seat-name">CPU 3</div>
-          <div class="hole cards face-down" id="p3"></div>
-          <div class="stack" id="stack3">1,000</div>
-          <!-- Action status display -->
-          <div class="action-status" id="action-status3"></div>
+        <div class="amount-control">
+          <label for="bet-amount" id="bet-label">Bet / Raise To</label>
+          <input id="bet-amount" type="number" min="0" step="5" value="20" />
         </div>
-      </div>
-    </section>
+        <div class="actions">
+          <button id="fold-btn">Fold</button>
+          <button id="check-call-btn">Check</button>
+          <button id="bet-raise-btn">Bet</button>
+        </div>
+      </section>
 
-    <!-- Controls -->
-    <section class="controls">
-      <button id="newHandBtn" class="btn">New Hand</button>
-      <button id="nextBtn" class="btn" disabled>Next Street</button>
-      <button id="showBtn" class="btn" disabled>Showdown</button>
-      <button id="foldBtn" class="btn" disabled>Fold</button>
-      <button id="callBtn" class="btn" disabled>Call/Check</button>
-      <!-- Bet amount input -->
-      <input type="number" id="betAmount" min="1" max="10000" value="50" class="bet-input" style="width:80px; margin-right:4px;" />
-      <button id="betBtn" class="btn" disabled>Bet/Raise</button>
-      <div class="note">This starter focuses on dealing + hand strength. Betting/AI hooks are stubbed in <code>script.js</code> so you can expand later.</div>
-    </section>
+      <section class="log-panel">
+        <h2>Hand Log</h2>
+        <ol id="hand-log"></ol>
+      </section>
+    </main>
 
-    <!-- Log -->
-    <section class="log">
-      <div class="log-title">Dealer Log</div>
-      <div id="log" class="log-body"></div>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <span>🐀 Dealer: “No cheese lost — yet.”</span>
-  </footer>
-
-  <script src="script.js"></script>
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>
