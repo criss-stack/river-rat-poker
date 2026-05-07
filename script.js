@@ -858,4 +858,14 @@ function titleCase(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+// Register service worker for offline support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/service-worker.js')
+      .then(() => console.log('Service Worker registered'))
+      .catch(() => console.warn('Service Worker registration failed'));
+  });
+}
+
 initGame();

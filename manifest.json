@@ -1,0 +1,13 @@
+{
+  "name": "River Rat Poker",
+  "short_name": "RiverRat",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#160b08",
+  "theme_color": "#16776f",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "assets/dealer_rat/Rat_Happy.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/dealer_rat/Rat_Happy.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
