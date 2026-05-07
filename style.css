@@ -24,6 +24,7 @@
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100svh;
   color: var(--paper);
   font-family: Georgia, "Times New Roman", serif;
   cursor: url("assets/ui/Cursor.png") 8 2, auto;
@@ -38,6 +39,7 @@ input {
 }
 
 button {
+  min-height: 44px;
   cursor: pointer;
   border: 3px solid var(--ink);
   color: var(--ink);
@@ -64,11 +66,16 @@ button:disabled {
 .game-shell {
   width: min(1220px, calc(100vw - 24px));
   margin: 0 auto;
-  padding: 20px 0 28px;
+  padding:
+    max(20px, env(safe-area-inset-top))
+    max(0px, env(safe-area-inset-right))
+    max(28px, env(safe-area-inset-bottom))
+    max(0px, env(safe-area-inset-left));
 }
 
 .top-bar,
 .action-bar,
+.settings-panel,
 .log-panel {
   border: 4px solid var(--ink);
   background:
@@ -115,7 +122,6 @@ h1 {
   justify-content: flex-end;
 }
 
-.settings label,
 .amount-control label {
   display: grid;
   gap: 4px;
@@ -138,6 +144,21 @@ input {
   min-height: 44px;
   padding: 9px 16px;
   border-radius: 6px;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border-radius: 8px;
+  border: 3px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 1.05rem;
+  box-shadow: 0 4px 0 var(--ink);
 }
 
 .table-stage {
@@ -495,7 +516,7 @@ input {
 
 .action-bar {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) auto auto;
+  grid-template-columns: minmax(260px, 1fr) minmax(260px, 360px) auto;
   align-items: end;
   gap: 16px;
   padding: 14px;
@@ -504,6 +525,10 @@ input {
 
 .action-summary {
   color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
 }
 
 .action-summary strong,
@@ -511,10 +536,60 @@ input {
   display: block;
 }
 
+.action-summary .icon-button {
+  margin-left: auto;
+}
+
 .action-summary span {
   margin-top: 4px;
   color: #603516;
   font-weight: 700;
+}
+
+.amount-control {
+  display: grid;
+  gap: 8px;
+}
+
+.amount-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#bet-value {
+  color: var(--ink);
+  font-size: 1.2rem;
+}
+
+.amount-stepper {
+  display: grid;
+  grid-template-columns: 48px minmax(130px, 1fr) 48px;
+  align-items: center;
+  gap: 8px;
+}
+
+.amount-stepper button,
+.blind-control button {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0;
+  border-radius: 6px;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+input[type="range"] {
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--red);
 }
 
 .actions {
@@ -524,8 +599,9 @@ input {
 
 .actions button {
   min-width: 96px;
-  min-height: 46px;
+  min-height: 52px;
   border-radius: 6px;
+  font-weight: 900;
 }
 
 #fold-btn {
@@ -556,6 +632,14 @@ input {
     var(--gold);
 }
 
+.below-table {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.settings-panel,
 .log-panel {
   margin-top: 18px;
   padding: 14px 18px;
@@ -563,8 +647,50 @@ input {
   color: var(--ink);
 }
 
-.log-panel h2 {
+.settings-panel summary,
+.log-panel summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
   font-size: 1.1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.settings {
+  display: grid;
+  gap: 12px;
+  padding-top: 10px;
+}
+
+.blind-control {
+  display: grid;
+  gap: 7px;
+}
+
+.blind-control span {
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.blind-control div {
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
+  align-items: center;
+  gap: 8px;
+}
+
+.blind-control strong {
+  display: grid;
+  place-items: center;
+  min-height: 48px;
+  border: 3px solid var(--ink);
+  border-radius: 6px;
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 1.15rem;
 }
 
 #hand-log {
@@ -578,67 +704,352 @@ input {
 }
 
 @media (max-width: 900px) {
-  .top-bar,
-  .action-bar {
-    grid-template-columns: 1fr;
-    flex-direction: column;
-    align-items: stretch;
+  .game-shell {
+    width: 100%;
+    padding:
+      max(10px, env(safe-area-inset-top))
+      max(10px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left));
   }
 
-  .settings,
-  .actions {
-    justify-content: stretch;
+  .top-bar {
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
   }
 
-  .actions button {
-    flex: 1;
-    min-width: 0;
+  .eyebrow {
+    font-size: 0.68rem;
+  }
+
+  h1 {
+    font-size: clamp(1.55rem, 8vw, 3rem);
+  }
+
+  .wood-button {
+    min-width: 112px;
+    padding-inline: 12px;
   }
 
   .table-stage {
-    height: 720px;
+    height: clamp(540px, 116svw, 720px);
+    min-height: 540px;
+    margin: 10px 0 12px;
   }
 
   .poker-table {
-    inset: 184px 24px 188px;
+    inset: 154px 8px 144px;
+    border-radius: 28px;
+  }
+
+  .table-center {
+    gap: 8px;
+    padding: 30px 16px 24px;
+  }
+
+  .pot-display {
+    min-width: 150px;
+    padding: 8px 12px;
+    gap: 8px;
+    border-width: 3px;
+  }
+
+  .pot-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  #pot-amount {
+    font-size: 1.05rem;
+  }
+
+  .community-cards {
+    min-height: 78px;
+    gap: 4px;
+  }
+
+  .card {
+    width: clamp(43px, 12.1vw, 58px);
+    height: clamp(62px, 17vw, 82px);
+    border-radius: 5px;
+  }
+
+  .turn-info {
+    width: min(94%, 360px);
+    font-size: 0.92rem;
+  }
+
+  .chip-bank {
+    min-height: 34px;
+  }
+
+  .chip-bank img {
+    width: 32px;
+    height: 32px;
+    margin-left: -9px;
   }
 
   .player-panel {
-    width: min(250px, 48vw);
+    width: min(47vw, 184px);
+    min-height: 112px;
+    padding: 8px;
+    border-width: 3px;
+  }
+
+  .human-seat {
+    width: min(94vw, 360px);
+    min-height: 126px;
+    bottom: 0;
+  }
+
+  .top-left-seat {
+    top: 0;
+    left: 0;
+    transform: none;
+  }
+
+  .top-right-seat {
+    top: 0;
+    right: 0;
+    transform: none;
   }
 
   .left-seat {
-    top: 55%;
-    left: 4px;
+    top: 268px;
+    left: 0;
+    transform: none;
   }
 
   .right-seat {
-    top: 55%;
-    right: 4px;
+    top: 268px;
+    right: 0;
+    transform: none;
+  }
+
+  .player-head {
+    margin-bottom: 5px;
+  }
+
+  .player-name {
+    font-size: 0.9rem;
+  }
+
+  .badge {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    font-size: 0.64rem;
+  }
+
+  .player-stats {
+    gap: 4px;
+    margin-bottom: 6px;
+    font-size: 0.65rem;
+  }
+
+  .player-stats strong {
+    font-size: 0.8rem;
+  }
+
+  .player-panel .card {
+    width: 34px;
+    height: 48px;
+  }
+
+  .human-seat .card {
+    width: 44px;
+    height: 62px;
+  }
+
+  .dealer-character {
+    top: 112px;
+    width: 94px;
+  }
+
+  .dealer-character img {
+    width: 86px;
+    height: 86px;
+  }
+
+  .dealer-character span {
+    padding: 2px 7px;
+    border-width: 3px;
+    font-size: 0.6rem;
+  }
+
+  .banner {
+    top: 48%;
+    width: min(340px, calc(100vw - 28px));
+    padding: 12px 14px;
+    font-size: 1rem;
+  }
+
+  .action-bar {
+    position: sticky;
+    z-index: 20;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  .action-summary span {
+    display: none;
+  }
+
+  .amount-control {
+    gap: 6px;
+  }
+
+  .amount-stepper {
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .actions button {
+    min-width: 0;
+    min-height: 56px;
+    padding-inline: 6px;
+  }
+
+  .below-table {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .settings-panel,
+  .log-panel {
+    margin-top: 0;
+    padding: 10px 12px;
+  }
+
+  #hand-log {
+    max-height: 118px;
+  }
+}
+
+@media (min-width: 560px) and (max-width: 900px) {
+  .table-stage {
+    height: clamp(620px, 86svw, 780px);
+  }
+
+  .poker-table {
+    inset: 152px 72px 156px;
+  }
+
+  .left-seat,
+  .right-seat {
+    top: 314px;
+  }
+
+  .player-panel {
+    width: min(33vw, 220px);
+  }
+
+  .human-seat {
+    width: min(62vw, 420px);
+  }
+
+  .card {
+    width: 58px;
+    height: 82px;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .game-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 36vw);
+    grid-template-areas:
+      "top top"
+      "table actions"
+      "below below";
+    gap: 10px;
+    align-items: start;
+  }
+
+  .top-bar {
+    grid-area: top;
+  }
+
+  .table-stage {
+    grid-area: table;
+    height: calc(100svh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    min-height: 430px;
+    margin: 0;
+  }
+
+  .poker-table {
+    inset: 112px 12px 112px;
+  }
+
+  .left-seat,
+  .right-seat {
+    top: 218px;
+  }
+
+  .dealer-character {
+    top: 76px;
+  }
+
+  .human-seat {
+    width: min(64vw, 340px);
+  }
+
+  .action-bar {
+    grid-area: actions;
+    position: sticky;
+    top: max(10px, env(safe-area-inset-top));
+    bottom: auto;
+    align-self: stretch;
+  }
+
+  .actions {
+    grid-template-columns: 1fr;
+  }
+
+  .actions button {
+    min-height: 58px;
+  }
+
+  .below-table {
+    grid-area: below;
   }
 }
 
 @media (max-width: 620px) {
   .game-shell {
-    width: calc(100vw - 12px);
+    width: 100%;
+    padding-bottom: calc(206px + env(safe-area-inset-bottom));
   }
 
   .table-stage {
-    min-height: 780px;
+    height: clamp(520px, calc(100svh - 292px), 630px);
+    min-height: 0;
+    margin-bottom: 14px;
   }
 
   .poker-table {
-    inset: 180px 6px 222px;
+    inset: 144px 6px 132px;
   }
 
   .player-panel {
-    width: 46vw;
-    min-height: 134px;
-    padding: 8px;
+    width: calc(50vw - 16px);
+    min-height: 106px;
+    padding: 7px;
   }
 
   .bottom-seat {
-    width: min(270px, 92vw);
+    width: calc(100vw - 28px);
+    min-height: 118px;
   }
 
   .top-left-seat {
@@ -655,10 +1066,28 @@ input {
 
   .left-seat {
     left: 0;
+    top: min(250px, calc(100% - 252px));
   }
 
   .right-seat {
     right: 0;
+    top: min(250px, calc(100% - 252px));
+  }
+
+  .player-name {
+    font-size: 0.82rem;
+  }
+
+  .player-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .player-stats div:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .player-stats strong {
+    overflow-wrap: anywhere;
   }
 
   .community-cards {
@@ -672,5 +1101,60 @@ input {
 
   .dealer-character {
     display: none;
+  }
+
+  .action-bar {
+    position: fixed;
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    max-height: calc(100svh - 18px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+
+  .action-summary strong {
+    font-size: 0.98rem;
+  }
+
+  .amount-head {
+    align-items: center;
+  }
+
+  .amount-stepper {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    gap: 7px;
+  }
+
+  .amount-stepper button {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .actions button {
+    min-height: 58px;
+  }
+
+  .settings-panel,
+  .log-panel {
+    border-width: 3px;
+  }
+}
+
+@media (max-width: 380px) {
+  .top-bar {
+    flex-wrap: wrap;
+  }
+
+  .wood-button {
+    width: 100%;
+  }
+
+  .table-stage {
+    height: 510px;
+  }
+
+  .poker-table {
+    inset: 140px 4px 128px;
   }
 }
