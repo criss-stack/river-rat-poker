@@ -8,7 +8,7 @@ The game uses fictional chips only. No balances, bets, buy-ins, or future accoun
 
 This repo is being rebuilt around the new static game prototype. The current version includes:
 
-- Four-seat poker table with one human player and three CPU opponents
+- Five-seat poker table with one human player and four CPU opponents
 - Blinds, betting rounds, folding, checking, calling, betting, raising, and all-in play
 - Community cards, showdown evaluation, hand log, and persistent stacks during a session
 - Custom card, chip, table, dealer, UI, cursor, and effects artwork
