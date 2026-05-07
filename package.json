@@ -15,7 +15,8 @@
     "native:add:ios": "npx cap add ios",
     "native:sync": "npx cap sync",
     "native:open:android": "npx cap open android",
-    "native:open:ios": "npx cap open ios"
+    "native:open:ios": "npx cap open ios",
+    "native:generate-resources": "npx cordova-res --skip-config --copy || echo 'install cordova-res to generate native icons'"
   },
   "devDependencies": {
     "@capacitor/cli": "^5.0.0",

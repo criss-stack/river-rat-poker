@@ -2,5 +2,13 @@
   "appId": "com.criss.riverrat",
   "appName": "River Rat Poker",
   "webDir": "dist",
-  "bundledWebRuntime": false
+  "bundledWebRuntime": false,
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 3000,
+      "androidScaleType": "CENTER_CROP",
+      "splashFullScreen": false,
+      "splashImmersive": false
+    }
+  }
 }
