@@ -8,6 +8,18 @@
     "build": "node scripts/prepare-pages.mjs",
     "dev": "node scripts/dev-server.mjs",
     "start": "npm run dev",
-    "test": "node scripts/smoke-test.mjs"
+    "test": "node scripts/smoke-test.mjs",
+    "native:init": "npx @capacitor/cli init \"River Rat Poker\" com.criss.riverrat --web-dir=dist",
+    "native:build:web": "npm run build",
+    "native:add:android": "npx cap add android",
+    "native:add:ios": "npx cap add ios",
+    "native:sync": "npx cap sync",
+    "native:open:android": "npx cap open android",
+    "native:open:ios": "npx cap open ios",
+    "native:generate-resources": "npx cordova-res --skip-config --copy || echo 'install cordova-res to generate native icons'"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^5.0.0",
+    "@capacitor/core": "^5.0.0"
   }
 }
