@@ -37,9 +37,62 @@ const HAND_NAMES = [
 
 const STARTING_STACK = 1000;
 const HUMAN_INDEX = 0;
+const DEALER_REACTION_IMAGES = {
+  neutral: "assets/dealer_rat/Rat_Happy.png",
+  check: "assets/dealer_rat/Rat_Idle.png",
+  call: "assets/dealer_rat/Rat_Smug.png",
+  raise: "assets/dealer_rat/Rat_Surprised.png",
+  fold: "assets/dealer_rat/Rat_Sad.png",
+  allIn: "assets/dealer_rat/Rat_AllIn.png",
+  win: "assets/dealer_rat/Rat_Happy.png",
+  lose: "assets/dealer_rat/Rat_Sad.png"
+};
+const CPU_PERSONAS = {
+  patient: {
+    foldBias: 7,
+    aggression: -8,
+    callBias: 4,
+    raises: ["quietly stacks a raise", "waits, then raises"],
+    bets: ["leads into the current", "sets out a careful bet"],
+    calls: ["counts out a patient call", "smooth-calls"],
+    checks: ["checks with a tiny nod", "taps the felt"],
+    folds: ["lets the hand drift away", "folds without a squeak"]
+  },
+  balanced: {
+    foldBias: 0,
+    aggression: 0,
+    callBias: 0,
+    raises: ["raises with steady whiskers", "pushes in a raise"],
+    bets: ["bets cleanly", "slides out a bet"],
+    calls: ["calls", "matches the bet"],
+    checks: ["checks", "knocks the table"],
+    folds: ["folds", "mucks the cards"]
+  },
+  sticky: {
+    foldBias: -8,
+    aggression: -3,
+    callBias: 9,
+    raises: ["finds a stubborn raise", "raises after a long stare"],
+    bets: ["bets with a grin", "splashes out a bet"],
+    calls: ["sticks around with a call", "refuses to leave and calls"],
+    checks: ["checks, still lurking", "checks with narrowed eyes"],
+    folds: ["finally gives it up", "folds with a dramatic sigh"]
+  },
+  splashy: {
+    foldBias: -4,
+    aggression: 12,
+    callBias: 2,
+    raises: ["pounces with a raise", "fires a bright raise"],
+    bets: ["snaps out a bet", "throws a bold bet forward"],
+    calls: ["calls with a wink", "flicks in a call"],
+    checks: ["checks a little too innocently", "checks and watches everyone"],
+    folds: ["folds, already plotting", "ditches the hand with flair"]
+  }
+};
 
 const els = {
-  seats: [...Array(4)].map((_, index) => document.getElementById(`seat-${index}`)),
+  seats: [...Array(5)].map((_, index) => document.getElementById(`seat-${index}`)),
+  dealerRat: document.getElementById("dealer-rat"),
   community: document.getElementById("community-cards"),
   pot: document.getElementById("pot-amount"),
   street: document.getElementById("street-label"),
@@ -80,19 +133,21 @@ const game = {
 
 function initGame() {
   game.players = [
-    createPlayer("You", false),
-    createPlayer("Cheddar Chuck", true),
-    createPlayer("Marina Whiskers", true),
-    createPlayer("Barnacle Pip", true)
+    createPlayer("You", false, "balanced"),
+    createPlayer("Cheddar Chuck", true, "patient"),
+    createPlayer("Marina Whiskers", true, "balanced"),
+    createPlayer("Saffron Squeak", true, "splashy"),
+    createPlayer("Barnacle Pip", true, "sticky")
   ];
   wireEvents();
   render();
 }
 
-function createPlayer(name, cpu) {
+function createPlayer(name, cpu, persona) {
   return {
     name,
     cpu,
+    persona,
     stack: STARTING_STACK,
     hand: [],
     folded: false,
@@ -141,7 +196,7 @@ function startHand() {
   postBlinds();
   dealHoleCards();
   addLog(`Hand ${game.handNumber}: dealer button to ${game.players[game.dealerIndex].name}.`);
-  showBanner(`New hand. ${game.players[game.dealerIndex].name} has the button.`);
+  showBanner(game.dealerIndex === HUMAN_INDEX ? "New hand. You have the button." : `New hand. ${game.players[game.dealerIndex].name} has the button.`);
 
   const bigBlindIndex = nextSeatedPlayer(nextSeatedPlayer(game.dealerIndex));
   game.currentPlayer = getNextActivePlayer(bigBlindIndex);
@@ -151,7 +206,7 @@ function startHand() {
     window.setTimeout(completeBettingRound, 700);
     return;
   }
-  game.message = `${game.players[game.currentPlayer].name} acts first preflop.`;
+  game.message = game.currentPlayer === HUMAN_INDEX ? "You act first preflop." : `${game.players[game.currentPlayer].name} acts first preflop.`;
   render();
   continueIfCpuTurn();
 }
@@ -253,38 +308,59 @@ function runCpuTurn() {
   const callAmount = legalCallAmount(player);
   const strength = estimateHandStrength(index);
   const roll = Math.random();
+  const persona = CPU_PERSONAS[player.persona] || CPU_PERSONAS.balanced;
 
-  if (callAmount > 0 && callAmount >= player.stack && strength < 48 && roll < 0.55) {
+  if (callAmount > 0 && callAmount >= player.stack && strength < 48 + persona.foldBias && roll < 0.55) {
     player.folded = true;
     player.acted = true;
     player.lastAction = "Folded";
-    addLog(`${player.name} folds.`);
-  } else if (callAmount > 0 && strength + roll * 35 < 42 && callAmount > game.bigBlind) {
+    addLog(cpuActionLine(player, "fold"));
+    setDealerReaction("fold");
+  } else if (callAmount > 0 && strength + roll * 35 + persona.callBias < 42 + persona.foldBias && callAmount > game.bigBlind) {
     player.folded = true;
     player.acted = true;
     player.lastAction = "Folded";
-    addLog(`${player.name} folds.`);
-  } else if (shouldCpuRaise(strength, callAmount, roll, player.stack)) {
+    addLog(cpuActionLine(player, "fold"));
+    setDealerReaction("fold");
+  } else if (shouldCpuRaise(strength, callAmount, roll, player.stack, persona)) {
     const raiseSize = game.currentBet === 0 ? game.bigBlind : game.currentBet + game.minRaise;
     const target = Math.min(player.committed + player.stack, raiseSize + Math.floor(strength / 18) * game.bigBlind);
+    const action = game.currentBet === 0 ? "bet" : "raise";
     betOrRaiseTo(index, target);
-    addLog(`${player.name} ${game.currentBet === player.committed ? "raises" : "bets"} to $${player.committed}.`);
+    addLog(cpuActionLine(player, action, player.committed));
+    setDealerReaction(player.allIn ? "allIn" : "raise");
   } else {
     commitChips(index, callAmount);
     player.acted = true;
     player.lastAction = callAmount > 0 ? `Called $${callAmount}` : "Checked";
-    addLog(callAmount > 0 ? `${player.name} calls $${callAmount}.` : `${player.name} checks.`);
+    addLog(cpuActionLine(player, callAmount > 0 ? "call" : "check", callAmount));
+    setDealerReaction(callAmount > 0 ? "call" : "check");
   }
 
   render();
   window.setTimeout(advanceTurn, 520);
 }
 
-function shouldCpuRaise(strength, callAmount, roll, stack) {
+function shouldCpuRaise(strength, callAmount, roll, stack, persona = CPU_PERSONAS.balanced) {
   if (stack <= callAmount) return false;
-  if (game.street === "preflop") return strength > 72 && roll > 0.42;
-  if (callAmount === 0) return strength > 58 && roll > 0.58;
-  return strength > 76 && roll > 0.52;
+  const adjustedStrength = strength + persona.aggression;
+  if (game.street === "preflop") return adjustedStrength > 72 && roll > 0.42 - persona.aggression / 100;
+  if (callAmount === 0) return adjustedStrength > 58 && roll > 0.58 - persona.aggression / 100;
+  return adjustedStrength > 76 && roll > 0.52 - persona.aggression / 100;
+}
+
+function cpuActionLine(player, action, amount = 0) {
+  const persona = CPU_PERSONAS[player.persona] || CPU_PERSONAS.balanced;
+  const phrases = {
+    bet: persona.bets,
+    raise: persona.raises,
+    call: persona.calls,
+    check: persona.checks,
+    fold: persona.folds
+  }[action];
+  const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+  const suffix = amount > 0 ? `${action === "call" ? " for $" : " to $"}${amount}` : "";
+  return `${player.name} ${phrase}${suffix}.`;
 }
 
 function betOrRaiseTo(playerIndex, targetBet) {
@@ -345,7 +421,7 @@ function advanceTurn() {
     completeBettingRound();
     return;
   }
-  game.message = `${game.players[game.currentPlayer].name}'s turn.`;
+  game.message = game.currentPlayer === HUMAN_INDEX ? "Your turn." : `${game.players[game.currentPlayer].name}'s turn.`;
   render();
   continueIfCpuTurn();
 }
@@ -408,7 +484,7 @@ function startBettingRound() {
     return;
   }
   game.currentPlayer = first;
-  game.message = `${game.players[first].name} starts ${game.street}.`;
+  game.message = first === HUMAN_INDEX ? `You start ${game.street}.` : `${game.players[first].name} starts ${game.street}.`;
   render();
   continueIfCpuTurn();
 }
@@ -445,7 +521,9 @@ function awardPot(winnerIndexes, message) {
   game.awaitingNextHand = true;
   game.street = "showdown";
   game.message = "Hand complete. Start the next hand when ready.";
-  showBanner(message, winnerIndexes.includes(HUMAN_INDEX) ? "win" : "lose");
+  const resultType = winnerIndexes.includes(HUMAN_INDEX) ? "win" : "lose";
+  setDealerReaction(resultType);
+  showBanner(message, resultType);
   render();
 }
 
@@ -615,7 +693,7 @@ function renderPlayers() {
 }
 
 function seatClass(index) {
-  return ["bottom-seat human-seat", "left-seat", "top-seat", "right-seat"][index];
+  return ["bottom-seat human-seat", "left-seat", "top-left-seat", "top-right-seat", "right-seat"][index];
 }
 
 function renderCommunity() {
@@ -665,6 +743,16 @@ function showBanner(message, type = "neutral") {
   els.banner.classList.add("show");
   window.clearTimeout(showBanner.timer);
   showBanner.timer = window.setTimeout(() => els.banner.classList.remove("show"), 1800);
+}
+
+function setDealerReaction(reaction) {
+  els.dealerRat.src = DEALER_REACTION_IMAGES[reaction] || DEALER_REACTION_IMAGES.neutral;
+  window.clearTimeout(setDealerReaction.timer);
+  if (reaction !== "neutral") {
+    setDealerReaction.timer = window.setTimeout(() => {
+      els.dealerRat.src = DEALER_REACTION_IMAGES.neutral;
+    }, 1400);
+  }
 }
 
 function addLog(entry) {

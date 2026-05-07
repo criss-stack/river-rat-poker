@@ -284,10 +284,16 @@ input {
   opacity: 0.72;
 }
 
-.top-seat {
-  top: 0;
-  left: 50%;
+.top-left-seat {
+  top: 8px;
+  left: 26%;
   transform: translateX(-50%);
+}
+
+.top-right-seat {
+  top: 8px;
+  right: 26%;
+  transform: translateX(50%);
 }
 
 .bottom-seat {
@@ -298,13 +304,13 @@ input {
 
 .left-seat {
   left: 0;
-  top: 50%;
+  top: 55%;
   transform: translateY(-50%);
 }
 
 .right-seat {
   right: 0;
-  top: 50%;
+  top: 55%;
   transform: translateY(-50%);
 }
 
@@ -390,6 +396,10 @@ input {
 
 .seat-art-3 {
   --seat-art: url("assets/table/Seat_4.png");
+}
+
+.seat-art-4 {
+  --seat-art: url("assets/table/Seat_2.png");
 }
 
 .dealer-character {
@@ -598,12 +608,12 @@ input {
   }
 
   .left-seat {
-    top: 50%;
+    top: 55%;
     left: 4px;
   }
 
   .right-seat {
-    top: 50%;
+    top: 55%;
     right: 4px;
   }
 }
@@ -627,9 +637,20 @@ input {
     padding: 8px;
   }
 
-  .top-seat,
   .bottom-seat {
     width: min(270px, 92vw);
+  }
+
+  .top-left-seat {
+    top: 0;
+    left: 0;
+    transform: none;
+  }
+
+  .top-right-seat {
+    top: 0;
+    right: 0;
+    transform: none;
   }
 
   .left-seat {
