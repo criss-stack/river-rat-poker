@@ -1,0 +1,13 @@
+{
+  "name": "river-rat-poker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A static Texas hold'em browser game set at a rat-world casino table.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/prepare-pages.mjs",
+    "dev": "node scripts/dev-server.mjs",
+    "start": "npm run dev",
+    "test": "node scripts/smoke-test.mjs"
+  }
+}
