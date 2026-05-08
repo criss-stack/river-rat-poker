@@ -137,6 +137,8 @@ const game = {
   handInProgress: false,
   awaitingNextHand: false,
   lastAggressor: null,
+  smallBlindIndex: null,
+  bigBlindIndex: null,
   message: "Press New Hand to sit down.",
   log: []
 };
@@ -226,6 +228,8 @@ function startHand() {
   game.handInProgress = true;
   game.awaitingNextHand = false;
   game.lastAggressor = null;
+  game.smallBlindIndex = null;
+  game.bigBlindIndex = null;
   game.log = [];
 
   game.players.forEach((player) => {
@@ -239,8 +243,8 @@ function startHand() {
 
   postBlinds();
   dealHoleCards();
-  addLog(`Hand ${game.handNumber}: dealer button to ${game.players[game.dealerIndex].name}.`);
-  showBanner(game.dealerIndex === HUMAN_INDEX ? "New hand. You have the button." : `New hand. ${game.players[game.dealerIndex].name} has the button.`);
+  addLog(`Hand ${game.handNumber}: dealer button to ${playerUiLabel(game.dealerIndex)}.`);
+  showBanner(game.dealerIndex === HUMAN_INDEX ? "New hand. You have the button." : `New hand. ${playerUiLabel(game.dealerIndex)} has the button.`);
 
   const bigBlindIndex = nextSeatedPlayer(nextSeatedPlayer(game.dealerIndex));
   game.currentPlayer = getNextActivePlayer(bigBlindIndex);
@@ -250,7 +254,7 @@ function startHand() {
     window.setTimeout(completeBettingRound, 700);
     return;
   }
-  game.message = game.currentPlayer === HUMAN_INDEX ? "You act first preflop." : `${game.players[game.currentPlayer].name} acts first preflop.`;
+  game.message = game.currentPlayer === HUMAN_INDEX ? "You act first preflop." : `${playerUiLabel(game.currentPlayer)} acts first preflop.`;
   render();
   continueIfCpuTurn();
 }
@@ -315,13 +319,15 @@ function rotateDealer() {
 function postBlinds() {
   const smallBlindIndex = nextSeatedPlayer(game.dealerIndex);
   const bigBlindIndex = nextSeatedPlayer(smallBlindIndex);
+  game.smallBlindIndex = smallBlindIndex;
+  game.bigBlindIndex = bigBlindIndex;
   commitChips(smallBlindIndex, game.smallBlind);
   game.players[smallBlindIndex].lastAction = `Small blind $${game.players[smallBlindIndex].committed}`;
   commitChips(bigBlindIndex, game.bigBlind);
   game.players[bigBlindIndex].lastAction = `Big blind $${game.players[bigBlindIndex].committed}`;
   game.currentBet = game.players[bigBlindIndex].committed;
   game.lastAggressor = bigBlindIndex;
-  addLog(`${game.players[smallBlindIndex].name} posts $${game.smallBlind}; ${game.players[bigBlindIndex].name} posts $${game.bigBlind}.`);
+  addLog(`${playerUiLabel(smallBlindIndex)} posts $${game.smallBlind}; ${playerUiLabel(bigBlindIndex)} posts $${game.bigBlind}.`);
 }
 
 function dealHoleCards() {
@@ -442,7 +448,7 @@ function cpuActionLine(player, action, amount = 0) {
   }[action];
   const phrase = phrases[Math.floor(Math.random() * phrases.length)];
   const suffix = amount > 0 ? `${action === "call" ? " for $" : " to $"}${amount}` : "";
-  return `${player.name} ${phrase}${suffix}.`;
+  return `${playerUiLabel(game.players.indexOf(player))} ${phrase}${suffix}.`;
 }
 
 function betOrRaiseTo(playerIndex, targetBet) {
@@ -489,7 +495,7 @@ function advanceTurn() {
 
   const livePlayers = game.players.filter((player) => !player.folded);
   if (livePlayers.length === 1) {
-    awardPot([game.players.indexOf(livePlayers[0])], `${livePlayers[0].name} wins uncontested.`);
+    awardPot([game.players.indexOf(livePlayers[0])], `${playerUiLabel(game.players.indexOf(livePlayers[0]))} wins uncontested.`);
     return;
   }
 
@@ -503,7 +509,7 @@ function advanceTurn() {
     completeBettingRound();
     return;
   }
-  game.message = game.currentPlayer === HUMAN_INDEX ? "Your turn." : `${game.players[game.currentPlayer].name}'s turn.`;
+  game.message = game.currentPlayer === HUMAN_INDEX ? "Your turn." : `${playerUiLabel(game.currentPlayer)}'s turn.`;
   render();
   continueIfCpuTurn();
 }
@@ -566,7 +572,7 @@ function startBettingRound() {
     return;
   }
   game.currentPlayer = first;
-  game.message = first === HUMAN_INDEX ? `You start ${game.street}.` : `${game.players[first].name} starts ${game.street}.`;
+  game.message = first === HUMAN_INDEX ? `You start ${game.street}.` : `${playerUiLabel(first)} starts ${game.street}.`;
   render();
   continueIfCpuTurn();
 }
@@ -584,7 +590,7 @@ function showdown() {
 
   const best = scored[0].score;
   const winners = scored.filter((entry) => compareScores(entry.score, best) === 0).map((entry) => entry.index);
-  const winnerNames = winners.map((index) => game.players[index].name).join(" and ");
+  const winnerNames = winners.map((index) => playerUiLabel(index)).join(" and ");
   const handName = HAND_NAMES[best.category];
   addLog(`Showdown: ${winnerNames} win with ${handName}.`);
   awardPot(winners, `${winnerNames} win with ${handName}.`);
@@ -746,11 +752,6 @@ function render() {
 
 function renderPlayers() {
   game.players.forEach((player, index) => {
-    const badges = [];
-    if (index === game.dealerIndex) badges.push(`<span class="badge dealer">D</span>`);
-    if (player.allIn) badges.push(`<span class="badge status">All-in</span>`);
-    if (player.folded) badges.push(`<span class="badge status">Fold</span>`);
-
     const cards = player.hand
       .map((card) => {
         const hidden = player.cpu && game.handInProgress && game.street !== "showdown" && !player.folded;
@@ -758,7 +759,39 @@ function renderPlayers() {
       })
       .join("");
 
+    if (player.cpu) {
+      const state = getPlayerVisualState(player, index);
+      const blindMarker = getBlindMarker(index);
+      const tableBadges = [
+        index === game.dealerIndex ? `<span class="status-glyph dealer-glyph" aria-label="Dealer button">D</span>` : "",
+        blindMarker ? `<span class="status-glyph blind-glyph" aria-label="${blindMarker === "SB" ? "Small blind" : "Big blind"}">${blindMarker}</span>` : "",
+        getStatusGlyph(state)
+      ].filter(Boolean).join("");
+
+      els.seats[index].className = `player-panel opponent-pod seat ${seatClass(index)} seat-art-${index}${game.currentPlayer === index ? " is-turn" : ""}${player.folded ? " is-folded" : ""}`;
+      els.seats[index].dataset.style = getCpuAggressionTone(player);
+      els.seats[index].dataset.state = state;
+      els.seats[index].innerHTML = `
+        <div class="opponent-meta">
+          <span class="opponent-stack">$${player.stack}</span>
+          <span class="opponent-bet">$${player.committed}</span>
+        </div>
+        <div class="opponent-cards">${renderCard(null, true)}${renderCard(null, true)}</div>
+        <div class="opponent-badges">${tableBadges}</div>
+      `;
+      return;
+    }
+
+    const badges = [];
+    if (index === game.dealerIndex) badges.push(`<span class="badge dealer">D</span>`);
+    if (index === game.smallBlindIndex) badges.push(`<span class="badge status">SB</span>`);
+    if (index === game.bigBlindIndex) badges.push(`<span class="badge status">BB</span>`);
+    if (player.allIn) badges.push(`<span class="badge status">All-in</span>`);
+    if (player.folded) badges.push(`<span class="badge status">Fold</span>`);
+
     els.seats[index].className = `player-panel seat ${seatClass(index)} seat-art-${index}${game.currentPlayer === index ? " is-turn" : ""}${player.folded ? " is-folded" : ""}`;
+    delete els.seats[index].dataset.style;
+    delete els.seats[index].dataset.state;
     els.seats[index].innerHTML = `
       <div class="player-head">
         <span class="player-name">${player.name}</span>
@@ -772,6 +805,51 @@ function renderPlayers() {
       <div class="card-row">${cards || renderCard(null, true) + renderCard(null, true)}</div>
     `;
   });
+}
+
+function getCpuAggressionTone(player) {
+  const persona = CPU_PERSONAS[player.persona] || CPU_PERSONAS.balanced;
+  if (persona.aggression <= -4) return "passive";
+  if (persona.aggression >= 8) return "aggressive";
+  return "balanced";
+}
+
+function getPlayerVisualState(player, index) {
+  if (player.allIn) return "all-in";
+  if (player.folded) return "folded";
+  if (game.currentPlayer === index) return "active";
+
+  const action = player.lastAction.toLowerCase();
+  if (action.includes("raise") || action.includes("bet") || action.includes("blind")) return "raised";
+  if (action.includes("call")) return "called";
+  if (action.includes("check")) return "checked";
+  return "waiting";
+}
+
+function getBlindMarker(index) {
+  if (index === game.smallBlindIndex) return "SB";
+  if (index === game.bigBlindIndex) return "BB";
+  return "";
+}
+
+function getStatusGlyph(state) {
+  const glyphs = {
+    active: "●",
+    checked: "✓",
+    called: "◉",
+    raised: "↑",
+    folded: "×",
+    "all-in": "✦"
+  };
+  const labels = {
+    active: "Current turn",
+    checked: "Checked",
+    called: "Called",
+    raised: "Bet or raise",
+    folded: "Folded",
+    "all-in": "All-in"
+  };
+  return glyphs[state] ? `<span class="status-glyph action-glyph" aria-label="${labels[state]}">${glyphs[state]}</span>` : "";
 }
 
 function seatClass(index) {
@@ -848,6 +926,11 @@ function setDealerReaction(reaction) {
 function addLog(entry) {
   game.log.unshift(entry);
   game.log = game.log.slice(0, 40);
+}
+
+function playerUiLabel(index) {
+  if (index === HUMAN_INDEX) return "You";
+  return `Opponent ${index}`;
 }
 
 function formatCard(card) {
