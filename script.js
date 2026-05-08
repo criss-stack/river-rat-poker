@@ -45,7 +45,7 @@ const DEALER_RAT_IMAGES = {
   surprised: "assets/dealer_rat/Rat_Surprised.png",
   allIn: "assets/dealer_rat/Rat_AllIn.png"
 };
-const DEALER_RAT_ASSET_VERSION = "20260507-2350";
+const DEALER_RAT_ASSET_VERSION = "20260508-0001";
 const CPU_PERSONAS = {
   patient: {
     foldBias: 7,
@@ -942,7 +942,9 @@ function setDealerRatState(state, durationMs) {
 }
 
 function dealerRatImageSrc(state) {
-  return `${DEALER_RAT_IMAGES[state]}?v=${DEALER_RAT_ASSET_VERSION}`;
+  const src = new URL(DEALER_RAT_IMAGES[state], document.baseURI);
+  src.searchParams.set("v", DEALER_RAT_ASSET_VERSION);
+  return src.href;
 }
 
 function dealerRatAltText(state) {

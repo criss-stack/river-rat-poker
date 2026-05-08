@@ -44,7 +44,7 @@ for (const asset of assetReferences) {
 
 const index = readFileSync(join(root, "index.html"), "utf8");
 
-if (!index.includes('<script src="script.js"></script>')) {
+if (!/<script src="script\.js(?:\?[^"]*)?"><\/script>/.test(index)) {
   failures.push("index.html must load script.js.");
 }
 
