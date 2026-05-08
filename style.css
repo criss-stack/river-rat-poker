@@ -707,6 +707,39 @@ input {
   height: 104px;
   object-fit: contain;
   filter: drop-shadow(0 10px 7px rgba(0, 0, 0, 0.35));
+  transform-origin: 50% 82%;
+  transition: opacity 120ms ease, filter 180ms ease;
+}
+
+.dealer-character img.dealer-rat-pop {
+  animation: dealer-rat-pop 260ms ease-out;
+}
+
+@keyframes dealer-rat-pop {
+  0% {
+    opacity: 0.78;
+    transform: translateY(3px) scale(0.94) rotate(-1deg);
+  }
+
+  55% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.07) rotate(1deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dealer-character img {
+    transition: none;
+  }
+
+  .dealer-character img.dealer-rat-pop {
+    animation: none;
+  }
 }
 
 .dealer-character span {

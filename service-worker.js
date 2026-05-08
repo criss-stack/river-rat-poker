@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rrp-cache-v1';
+const CACHE_NAME = 'rrp-cache-v3';
 const CORE_ASSETS = [
   '/',
   '/index.html',
@@ -6,7 +6,12 @@ const CORE_ASSETS = [
   '/script.js',
   '/manifest.json',
   '/offline.html',
-  '/assets/dealer_rat/Rat_Happy.png'
+  '/assets/dealer_rat/Rat_Idle.png',
+  '/assets/dealer_rat/Rat_Dealing.png',
+  '/assets/dealer_rat/Rat_Happy.png',
+  '/assets/dealer_rat/Rat_Smug.png',
+  '/assets/dealer_rat/Rat_Surprised.png',
+  '/assets/dealer_rat/Rat_AllIn.png'
 ];
 
 self.addEventListener('install', (event) => {

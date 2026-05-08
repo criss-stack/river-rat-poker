@@ -37,16 +37,15 @@ const HAND_NAMES = [
 
 const STARTING_STACK = 1000;
 const HUMAN_INDEX = 0;
-const DEALER_REACTION_IMAGES = {
-  neutral: "assets/dealer_rat/Rat_Happy.png",
-  check: "assets/dealer_rat/Rat_Idle.png",
-  call: "assets/dealer_rat/Rat_Smug.png",
-  raise: "assets/dealer_rat/Rat_Surprised.png",
-  fold: "assets/dealer_rat/Rat_Sad.png",
-  allIn: "assets/dealer_rat/Rat_AllIn.png",
-  win: "assets/dealer_rat/Rat_Happy.png",
-  lose: "assets/dealer_rat/Rat_Sad.png"
+const DEALER_RAT_IMAGES = {
+  idle: "assets/dealer_rat/Rat_Idle.png",
+  dealing: "assets/dealer_rat/Rat_Dealing.png",
+  happy: "assets/dealer_rat/Rat_Happy.png",
+  smug: "assets/dealer_rat/Rat_Smug.png",
+  surprised: "assets/dealer_rat/Rat_Surprised.png",
+  allIn: "assets/dealer_rat/Rat_AllIn.png"
 };
+const DEALER_RAT_ASSET_VERSION = "20260507-2350";
 const CPU_PERSONAS = {
   patient: {
     foldBias: 7,
@@ -153,6 +152,7 @@ function initGame() {
   ];
   wireEvents();
   render();
+  setDealerRatState("idle");
 }
 
 function createPlayer(name, cpu, persona) {
@@ -213,6 +213,7 @@ function wireEvents() {
 
 function startHand() {
   readBlindSettings();
+  setDealerRatState("idle");
   if (activePlayers().length < 2) {
     resetBustedStacks();
     showBanner("Fresh cheese markers issued. Everyone is back in.");
@@ -243,6 +244,7 @@ function startHand() {
 
   postBlinds();
   dealHoleCards();
+  setDealerRatState("dealing", 900);
   addLog(`Hand ${game.handNumber}: dealer button to ${playerUiLabel(game.dealerIndex)}.`);
   showBanner(game.dealerIndex === HUMAN_INDEX ? "New hand. You have the button." : `New hand. ${playerUiLabel(game.dealerIndex)} has the button.`);
 
@@ -256,6 +258,7 @@ function startHand() {
   }
   game.message = game.currentPlayer === HUMAN_INDEX ? "You act first preflop." : `${playerUiLabel(game.currentPlayer)} acts first preflop.`;
   render();
+  flagTenseHumanDecision();
   continueIfCpuTurn();
 }
 
@@ -373,6 +376,7 @@ function handleHumanAction(action) {
     player.acted = true;
     player.lastAction = callAmount > 0 ? `Called $${callAmount}` : "Checked";
     addLog(callAmount > 0 ? `You call $${callAmount}.` : "You check.");
+    if (player.allIn) setDealerRatState("allIn", 1400);
     advanceTurn();
     return;
   }
@@ -381,8 +385,10 @@ function handleHumanAction(action) {
   const result = betOrRaiseTo(HUMAN_INDEX, targetBet);
   if (result.ok) {
     addLog(`You ${game.currentBet === player.committed ? "raise" : "bet"} to $${player.committed}.`);
+    setDealerRatState(player.allIn ? "allIn" : "smug", 1400);
     advanceTurn();
   } else {
+    setDealerRatState("surprised", 1400);
     showBanner(result.reason);
   }
 }
@@ -403,26 +409,24 @@ function runCpuTurn() {
     player.acted = true;
     player.lastAction = "Folded";
     addLog(cpuActionLine(player, "fold"));
-    setDealerReaction("fold");
   } else if (callAmount > 0 && strength + roll * 35 + persona.callBias < 42 + persona.foldBias && callAmount > game.bigBlind) {
     player.folded = true;
     player.acted = true;
     player.lastAction = "Folded";
     addLog(cpuActionLine(player, "fold"));
-    setDealerReaction("fold");
   } else if (shouldCpuRaise(strength, callAmount, roll, player.stack, persona)) {
     const raiseSize = game.currentBet === 0 ? game.bigBlind : game.currentBet + game.minRaise;
     const target = Math.min(player.committed + player.stack, raiseSize + Math.floor(strength / 18) * game.bigBlind);
     const action = game.currentBet === 0 ? "bet" : "raise";
     betOrRaiseTo(index, target);
     addLog(cpuActionLine(player, action, player.committed));
-    setDealerReaction(player.allIn ? "allIn" : "raise");
+    setDealerRatState(player.allIn ? "allIn" : "smug", 1400);
   } else {
     commitChips(index, callAmount);
     player.acted = true;
     player.lastAction = callAmount > 0 ? `Called $${callAmount}` : "Checked";
     addLog(cpuActionLine(player, callAmount > 0 ? "call" : "check", callAmount));
-    setDealerReaction(callAmount > 0 ? "call" : "check");
+    if (player.allIn) setDealerRatState("allIn", 1400);
   }
 
   render();
@@ -539,6 +543,7 @@ function completeBettingRound() {
 }
 
 function dealStreet() {
+  setDealerRatState("dealing", 1000);
   if (game.street === "preflop") {
     game.community.push(game.deck.pop(), game.deck.pop(), game.deck.pop());
     game.street = "flop";
@@ -574,6 +579,7 @@ function startBettingRound() {
   game.currentPlayer = first;
   game.message = first === HUMAN_INDEX ? `You start ${game.street}.` : `${playerUiLabel(first)} starts ${game.street}.`;
   render();
+  flagTenseHumanDecision();
   continueIfCpuTurn();
 }
 
@@ -609,9 +615,8 @@ function awardPot(winnerIndexes, message) {
   game.awaitingNextHand = true;
   game.street = "showdown";
   game.message = "Hand complete. Start the next hand when ready.";
-  const resultType = winnerIndexes.includes(HUMAN_INDEX) ? "win" : "lose";
-  setDealerReaction(resultType);
-  showBanner(message, resultType);
+  setDealerRatState("happy");
+  showBanner(message, winnerIndexes.includes(HUMAN_INDEX) ? "win" : "lose");
   render();
 }
 
@@ -913,13 +918,49 @@ function showBanner(message, type = "neutral") {
   showBanner.timer = window.setTimeout(() => els.banner.classList.remove("show"), 1800);
 }
 
-function setDealerReaction(reaction) {
-  els.dealerRat.src = DEALER_REACTION_IMAGES[reaction] || DEALER_REACTION_IMAGES.neutral;
-  window.clearTimeout(setDealerReaction.timer);
-  if (reaction !== "neutral") {
-    setDealerReaction.timer = window.setTimeout(() => {
-      els.dealerRat.src = DEALER_REACTION_IMAGES.neutral;
-    }, 1400);
+function setDealerRatState(state, durationMs) {
+  const nextState = DEALER_RAT_IMAGES[state] ? state : "idle";
+  window.clearTimeout(setDealerRatState.timer);
+  setDealerRatState.version = (setDealerRatState.version || 0) + 1;
+  const version = setDealerRatState.version;
+
+  if (!durationMs) setDealerRatState.persistentState = nextState;
+  els.dealerRat.src = dealerRatImageSrc(nextState);
+  els.dealerRat.alt = dealerRatAltText(nextState);
+  els.dealerRat.dataset.state = nextState;
+  els.dealerRat.classList.remove("dealer-rat-pop");
+  void els.dealerRat.offsetWidth;
+  els.dealerRat.classList.add("dealer-rat-pop");
+
+  if (durationMs) {
+    setDealerRatState.timer = window.setTimeout(() => {
+      if (version === setDealerRatState.version) {
+        setDealerRatState(setDealerRatState.persistentState || "idle");
+      }
+    }, durationMs);
+  }
+}
+
+function dealerRatImageSrc(state) {
+  return `${DEALER_RAT_IMAGES[state]}?v=${DEALER_RAT_ASSET_VERSION}`;
+}
+
+function dealerRatAltText(state) {
+  return {
+    idle: "Idle rat dealer shuffling cards",
+    dealing: "Rat dealer dealing cards",
+    happy: "Happy rat dealer in a vest",
+    smug: "Smug rat dealer watching a bold bet",
+    surprised: "Surprised rat dealer reacting to a tense moment",
+    allIn: "Rat dealer reacting to an all-in bet"
+  }[state] || "Rat dealer";
+}
+
+function flagTenseHumanDecision() {
+  if (game.currentPlayer !== HUMAN_INDEX || !game.handInProgress) return;
+  const player = game.players[HUMAN_INDEX];
+  if (legalCallAmount(player) >= player.stack && player.stack > 0) {
+    setDealerRatState("surprised", 1400);
   }
 }
 
