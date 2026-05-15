@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const dist = join(root, "dist");
-const filesToPublish = ["index.html", "style.css", "script.js", "assets"];
+const filesToPublish = ["index.html", "style.css", "script.js", "service-worker.js", "manifest.json", "offline.html", "assets"];
 
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });

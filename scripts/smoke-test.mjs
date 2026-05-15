@@ -48,7 +48,7 @@ if (!/<script src="script\.js(?:\?[^"]*)?"><\/script>/.test(index)) {
   failures.push("index.html must load script.js.");
 }
 
-if (!index.includes('<link rel="stylesheet" href="style.css"')) {
+if (!/<link rel="stylesheet" href="style\.css(?:\?[^"]*)?" \/>/.test(index)) {
   failures.push("index.html must load style.css.");
 }
 

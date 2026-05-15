@@ -1,17 +1,17 @@
-const CACHE_NAME = 'rrp-cache-v4';
+const CACHE_NAME = 'rrp-cache-v5';
 const CORE_ASSETS = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/script.js',
-  '/manifest.json',
-  '/offline.html',
-  '/assets/dealer_rat/Rat_Idle.png',
-  '/assets/dealer_rat/Rat_Dealing.png',
-  '/assets/dealer_rat/Rat_Happy.png',
-  '/assets/dealer_rat/Rat_Smug.png',
-  '/assets/dealer_rat/Rat_Surprised.png',
-  '/assets/dealer_rat/Rat_AllIn.png'
+  './',
+  './index.html',
+  './style.css',
+  './script.js',
+  './manifest.json',
+  './offline.html',
+  './assets/dealer_rat/Rat_Idle.png',
+  './assets/dealer_rat/Rat_Dealing.png',
+  './assets/dealer_rat/Rat_Happy.png',
+  './assets/dealer_rat/Rat_Smug.png',
+  './assets/dealer_rat/Rat_Surprised.png',
+  './assets/dealer_rat/Rat_AllIn.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -38,7 +38,7 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           return response;
         })
-        .catch(() => caches.match('/offline.html'))
+        .catch(() => caches.match('./offline.html'))
     );
     return;
   }
