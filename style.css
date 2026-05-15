@@ -202,7 +202,11 @@ input {
 
 .poker-table {
   position: absolute;
-  inset: var(--table-block-inset) var(--table-side-inset);
+  top: var(--table-block-inset);
+  bottom: var(--table-block-inset);
+  left: 50%;
+  width: min(calc(100% - (var(--table-side-inset) * 2)), 1500px);
+  transform: translateX(-50%);
   overflow: hidden;
   border: 0;
   border: 1px solid rgba(20, 184, 166, 0.26);
@@ -1072,7 +1076,9 @@ input[type="range"] {
   }
 
   .poker-table {
-    inset: var(--table-block-inset) var(--table-side-inset) clamp(96px, 17svh, 122px);
+    top: var(--table-block-inset);
+    bottom: clamp(96px, 17svh, 122px);
+    width: calc(100% - (var(--table-side-inset) * 2));
     border-radius: 24px;
   }
 
@@ -1302,7 +1308,9 @@ input[type="range"] {
   }
 
   .poker-table {
-    inset: var(--table-block-inset) var(--table-side-inset);
+    top: var(--table-block-inset);
+    bottom: var(--table-block-inset);
+    width: calc(100% - (var(--table-side-inset) * 2));
   }
 
   .left-seat,
@@ -1352,7 +1360,9 @@ input[type="range"] {
   }
 
   .poker-table {
-    inset: var(--table-block-inset) var(--table-side-inset);
+    top: var(--table-block-inset);
+    bottom: var(--table-block-inset);
+    width: calc(100% - (var(--table-side-inset) * 2));
   }
 
   .left-seat,
@@ -1434,7 +1444,9 @@ input[type="range"] {
   }
 
   .poker-table {
-    inset: var(--table-block-inset) var(--table-side-inset) clamp(84px, 16svh, 94px);
+    top: var(--table-block-inset);
+    bottom: clamp(84px, 16svh, 94px);
+    width: calc(100% - (var(--table-side-inset) * 2));
     border-radius: 20px;
   }
 
@@ -1700,7 +1712,9 @@ input[type="range"] {
   }
 
   .poker-table {
-    inset: 94px var(--table-side-inset) 88px;
+    top: 94px;
+    bottom: 88px;
+    width: calc(100% - (var(--table-side-inset) * 2));
   }
 }
 
@@ -1715,7 +1729,10 @@ input[type="range"] {
 
   .poker-table {
     position: relative;
-    inset: auto;
+    top: auto;
+    bottom: auto;
+    left: 50%;
+    width: min(calc(100% - (var(--table-side-inset) * 2)), 1500px);
     height: min(60vh, 560px);
     border-radius: 24px;
   }
@@ -1755,7 +1772,10 @@ input[type="range"] {
   }
 
   .poker-table {
-    inset: 80px 80px 80px;
+    top: clamp(66px, 9svh, 80px);
+    bottom: clamp(66px, 9svh, 80px);
+    left: 50%;
+    width: min(calc(100% - 160px), 1500px);
     height: auto;
   }
 }
