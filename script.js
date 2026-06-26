@@ -778,6 +778,7 @@ function renderPlayers() {
       els.seats[index].dataset.state = state;
       els.seats[index].innerHTML = `
         <div class="opponent-meta">
+          <span class="opponent-name">${player.name}</span>
           <span class="opponent-stack">$${player.stack}</span>
           <span class="opponent-bet">$${player.committed}</span>
         </div>
