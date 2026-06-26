@@ -1779,3 +1779,453 @@ input[type="range"] {
     height: auto;
   }
 }
+
+@media (max-width: 950px) and (orientation: landscape) {
+  html,
+  body {
+    width: 100%;
+    min-width: 0;
+    min-height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    height: 100svh;
+  }
+
+  .game-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "top"
+      "table";
+    gap: 6px;
+    width: 100%;
+    height: 100svh;
+    padding:
+      max(5px, env(safe-area-inset-top))
+      max(8px, env(safe-area-inset-right))
+      max(6px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
+    overflow: hidden;
+  }
+
+  .top-bar {
+    grid-area: top;
+    min-height: 44px;
+    padding: 5px 8px;
+    border-radius: 10px;
+    gap: 8px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+  }
+
+  .eyebrow {
+    margin-bottom: 1px;
+    font-size: 0.5rem;
+  }
+
+  h1 {
+    font-size: clamp(1rem, 3.1vw, 1.35rem);
+  }
+
+  .top-actions {
+    gap: 6px;
+  }
+
+  .top-actions .icon-button {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    border-radius: 10px;
+  }
+
+  .wood-button {
+    min-width: 88px;
+    min-height: 38px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 0.86rem;
+  }
+
+  .table-stage {
+    grid-area: table;
+    --table-side-inset: clamp(74px, 14vw, 118px);
+    --table-block-inset: clamp(56px, 13svh, 70px);
+    --seat-edge-inset: 6px;
+    --dealer-size: clamp(54px, 10svh, 72px);
+    height: calc(100svh - 58px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    min-height: 0;
+    max-height: none;
+    margin: 0;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .poker-table {
+    top: var(--table-block-inset);
+    bottom: clamp(64px, 15svh, 80px);
+    width: calc(100% - (var(--table-side-inset) * 2));
+    min-width: 0;
+    border-radius: 18px;
+    box-shadow:
+      inset 0 0 36px rgba(20, 184, 166, 0.24),
+      0 14px 34px rgba(0, 0, 0, 0.44);
+  }
+
+  .poker-table::after {
+    inset: 8% 7%;
+  }
+
+  .table-center {
+    gap: 4px;
+    padding: 18px 8px 8px;
+  }
+
+  .pot-display {
+    min-width: 118px;
+    gap: 6px;
+    padding: 5px 9px;
+    border-width: 1px;
+  }
+
+  .pot-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  #pot-amount {
+    font-size: 0.92rem;
+  }
+
+  #street-label {
+    font-size: 0.58rem;
+  }
+
+  .community-cards {
+    min-height: 46px;
+    gap: 3px;
+  }
+
+  .community-cards .card,
+  .card {
+    width: clamp(31px, 5.6vw, 44px);
+    height: clamp(44px, 7.9vw, 62px);
+    border-radius: 4px;
+  }
+
+  .turn-info {
+    min-height: 16px;
+    width: min(92%, 260px);
+    font-size: 0.66rem;
+    line-height: 1.15;
+    text-shadow: 0 1px 4px var(--ink);
+  }
+
+  .chip-bank {
+    min-height: 20px;
+    margin-top: -5px;
+  }
+
+  .chip-bank img {
+    width: 20px;
+    height: 20px;
+    margin-left: -7px;
+  }
+
+  .dealer-character {
+    top: clamp(38px, 8.5svh, 52px);
+    width: calc(var(--dealer-size) + 12px);
+    gap: 0;
+  }
+
+  .dealer-character img {
+    width: var(--dealer-size);
+    height: var(--dealer-size);
+  }
+
+  .dealer-character span {
+    padding: 1px 6px;
+    border-width: 1px;
+    font-size: 0.5rem;
+    white-space: nowrap;
+  }
+
+  .player-panel {
+    width: 148px;
+    min-height: 66px;
+    padding: 5px;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .opponent-pod {
+    width: 112px;
+    min-height: 48px;
+    gap: 4px;
+    padding: 4px 6px;
+    border-radius: 999px;
+  }
+
+  .top-left-seat {
+    top: 4px;
+    left: clamp(118px, 25vw, 212px);
+    transform: translateX(-50%);
+  }
+
+  .top-right-seat {
+    top: 4px;
+    right: clamp(118px, 25vw, 212px);
+    transform: translateX(50%);
+  }
+
+  .left-seat {
+    top: 50%;
+    left: var(--seat-edge-inset);
+    transform: translateY(-45%);
+  }
+
+  .right-seat {
+    top: 50%;
+    right: var(--seat-edge-inset);
+    transform: translateY(-45%);
+  }
+
+  .human-seat {
+    left: max(8px, env(safe-area-inset-left));
+    bottom: max(5px, env(safe-area-inset-bottom));
+    width: clamp(214px, 36vw, 280px);
+    min-height: 68px;
+    transform: none;
+  }
+
+  .player-head {
+    gap: 4px;
+    margin-bottom: 3px;
+  }
+
+  .player-name {
+    font-size: 0.62rem;
+    line-height: 1.05;
+  }
+
+  .badge-row {
+    gap: 2px;
+  }
+
+  .badge {
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    font-size: 0.48rem;
+  }
+
+  .player-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+    margin-bottom: 3px;
+    font-size: 0.46rem;
+  }
+
+  .player-stats strong {
+    font-size: 0.58rem;
+    overflow-wrap: anywhere;
+  }
+
+  .player-panel .card {
+    width: 24px;
+    height: 34px;
+    border-radius: 4px;
+  }
+
+  .human-seat .card {
+    width: 30px;
+    height: 42px;
+  }
+
+  .opponent-meta {
+    gap: 2px;
+  }
+
+  .opponent-stack,
+  .opponent-bet {
+    min-height: 17px;
+    padding: 2px 6px;
+  }
+
+  .opponent-stack {
+    font-size: 0.62rem;
+  }
+
+  .opponent-bet {
+    font-size: 0.54rem;
+  }
+
+  .opponent-cards {
+    width: 32px;
+    min-width: 32px;
+    height: 30px;
+  }
+
+  .opponent-cards .card {
+    width: 18px;
+    height: 26px;
+  }
+
+  .opponent-cards .card + .card {
+    margin-left: -10px;
+  }
+
+  .opponent-badges {
+    top: -6px;
+    right: -5px;
+    gap: 2px;
+  }
+
+  .status-glyph {
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 0.48rem;
+  }
+
+  .action-bar {
+    position: fixed;
+    z-index: 80;
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(6px, env(safe-area-inset-bottom));
+    left: auto;
+    top: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: min(342px, calc(58vw - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    min-width: 284px;
+    max-height: calc(100svh - 62px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    gap: 5px;
+    align-self: auto;
+    padding: 7px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.46);
+  }
+
+  .action-summary {
+    min-height: 28px;
+    gap: 6px;
+  }
+
+  .action-summary strong {
+    font-size: 0.78rem;
+    line-height: 1;
+  }
+
+  .action-summary span {
+    display: none;
+  }
+
+  .action-summary .icon-button {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    border-radius: 9px;
+    font-size: 0.9rem;
+  }
+
+  .amount-control {
+    gap: 4px;
+  }
+
+  .amount-head {
+    align-items: center;
+  }
+
+  .amount-control label {
+    font-size: 0.58rem;
+  }
+
+  #bet-value {
+    font-size: 0.96rem;
+  }
+
+  .amount-stepper {
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
+    gap: 6px;
+  }
+
+  .amount-stepper button {
+    width: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+
+  input[type="range"] {
+    min-height: 36px;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .actions button {
+    min-width: 0;
+    min-height: 44px;
+    padding: 5px 6px;
+    border-radius: 9px;
+    font-size: 0.82rem;
+  }
+
+  .below-table {
+    display: block;
+    grid-area: unset;
+    margin: 0;
+  }
+
+  .settings-panel:not([open]),
+  .log-panel:not([open]) {
+    display: none;
+  }
+
+  .settings-panel[open],
+  .log-panel[open] {
+    position: fixed;
+    z-index: 90;
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: calc(116px + env(safe-area-inset-bottom));
+    max-height: min(42svh, 190px);
+    margin: 0;
+    padding: 8px 10px;
+    overflow: auto;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 760px) and (orientation: landscape) {
+  .table-stage {
+    --table-side-inset: clamp(58px, 12vw, 86px);
+    --table-block-inset: clamp(50px, 12svh, 60px);
+  }
+
+  .top-left-seat {
+    left: clamp(96px, 23vw, 156px);
+  }
+
+  .top-right-seat {
+    right: clamp(96px, 23vw, 156px);
+  }
+
+  .human-seat {
+    width: clamp(194px, 34vw, 234px);
+  }
+
+  .action-bar {
+    width: min(310px, calc(56vw - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    min-width: 260px;
+  }
+}
+
