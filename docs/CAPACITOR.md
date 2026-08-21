@@ -1,37 +1,40 @@
-Capacitor integration notes
+# Capacitor Integration
 
-This doc provides a minimal scaffold to wrap River Rat Poker with Capacitor.
+River Rat Poker uses Capacitor to package the shared mobile web game into native app targets.
 
-What was added
-- capacitor.config.json (webDir: dist)
-- package.json scripts for common Capacitor commands
-- docs/CAPACITOR.md (this file)
-- native/ folder placeholder with README
+## Current State
 
-Getting started (developer)
-1. Install the Capacitor CLI and core (locally):
-   npm install --save-dev @capacitor/cli @capacitor/core
+- `capacitor.config.json` sets `webDir` to `dist`.
+- `ios/` is tracked and is the current native app target.
+- `package.json` includes build, sync, open, and doctor scripts.
+- `resources/` contains source icon and splash SVG assets.
 
-2. Build the web app:
-   npm run build
+## Daily Workflow
 
-3. Initialize Capacitor (only first-time):
-   npm run native:init
-   or: npx cap init "River Rat Poker" com.criss.riverrat --web-dir=dist
+```bash
+npm install
+npm run native:prepare:ios
+npm run native:open:ios
+```
 
-4. Add platforms:
-   npm run native:add:android
-   npm run native:add:ios
+`native:prepare:ios` runs the web build first, then syncs `dist/` into the native iOS project.
 
-5. Sync after any web changes:
-   npm run native:sync
+## First-Time Platform Commands
 
-6. Open native IDEs:
-   npm run native:open:android
-   npm run native:open:ios
+The iOS target is already present. Android can be introduced later when needed:
 
-Notes
-- This scaffold does NOT include platform folders; running the add platform commands will create them.
-- iOS builds require macOS and Xcode. Android builds require Android Studio and SDK.
-- After adding platforms, avoid committing large native files unless intentionally tracking native project changes.
-- Consider running: npm ci after updating package.json to install Capacitor packages.
+```bash
+npm run native:add:android
+```
+
+After any platform addition or native plugin change, run:
+
+```bash
+npm run native:sync
+```
+
+## Notes
+
+- Keep gameplay and UI changes in `index.html`, `style.css`, `premium-ui.css`, `script.js`, and `assets/`.
+- Treat native folders as packaging, signing, icons, launch screens, and platform configuration.
+- Do not fork poker rules or table rendering into native-only code unless the project explicitly leaves the Capacitor architecture.

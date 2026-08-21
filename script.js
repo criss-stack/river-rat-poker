@@ -106,11 +106,18 @@ const els = {
   bigBlindValue: document.getElementById("big-blind-value"),
   bigBlindMinus: document.getElementById("big-blind-minus"),
   bigBlindPlus: document.getElementById("big-blind-plus"),
+  actionBar: document.getElementById("action-dock"),
+  amountControl: document.getElementById("amount-control"),
+  primaryActions: document.getElementById("primary-actions"),
   betAmount: document.getElementById("bet-amount"),
   betRange: document.getElementById("bet-range"),
   betValue: document.getElementById("bet-value"),
+  amountReadout: document.getElementById("amount-readout"),
   betMinus: document.getElementById("bet-minus"),
   betPlus: document.getElementById("bet-plus"),
+  betDrawerToggle: document.getElementById("bet-drawer-toggle"),
+  betDrawer: document.getElementById("bet-drawer"),
+  betPresets: [...document.querySelectorAll("[data-bet-preset]")],
   betLabel: document.getElementById("bet-label"),
   actionTitle: document.getElementById("action-title"),
   actionDetail: document.getElementById("action-detail"),
@@ -138,7 +145,7 @@ const game = {
   lastAggressor: null,
   smallBlindIndex: null,
   bigBlindIndex: null,
-  message: "Press New Hand to sit down.",
+  message: "Ready to deal",
   log: []
 };
 
@@ -178,6 +185,12 @@ function wireEvents() {
   els.betRange.addEventListener("input", () => setBetAmount(Number(els.betRange.value)));
   els.betMinus.addEventListener("click", () => adjustBetAmount(-Number(els.betAmount.step || game.bigBlind)));
   els.betPlus.addEventListener("click", () => adjustBetAmount(Number(els.betAmount.step || game.bigBlind)));
+  if (els.betDrawerToggle && els.betDrawer) {
+    els.betDrawerToggle.addEventListener("click", () => toggleBetDrawer());
+  }
+  els.betPresets.forEach((button) => {
+    button.addEventListener("click", () => applyBetPreset(button.dataset.betPreset));
+  });
   els.smallBlindMinus.addEventListener("click", () => adjustBlind("small", -1));
   els.smallBlindPlus.addEventListener("click", () => adjustBlind("small", 1));
   els.bigBlindMinus.addEventListener("click", () => adjustBlind("big", -1));
@@ -297,6 +310,31 @@ function adjustBetAmount(delta) {
   setBetAmount(Number(els.betAmount.value) + delta);
 }
 
+function toggleBetDrawer(forceOpen) {
+  if (!els.betDrawer || !els.betDrawerToggle) return;
+  const willOpen = typeof forceOpen === "boolean" ? forceOpen : els.betDrawer.hidden;
+  els.betDrawer.hidden = !willOpen;
+  document.body.classList.toggle("is-sizing-open", willOpen);
+  els.betDrawerToggle.setAttribute("aria-expanded", String(willOpen));
+}
+
+function applyBetPreset(preset) {
+  const player = game.players[HUMAN_INDEX];
+  if (!player) return;
+  const maxTarget = player.committed + player.stack;
+  let target;
+
+  if (preset === "all-in") {
+    target = maxTarget;
+  } else {
+    const multiplier = Number(preset);
+    const base = game.currentBet > 0 ? game.currentBet : game.bigBlind;
+    target = player.committed + Math.max(base, Math.round(game.pot * multiplier));
+  }
+
+  setBetAmount(Math.min(maxTarget, target));
+}
+
 function setBetAmount(value) {
   const min = Number(els.betAmount.min) || 0;
   const max = Number(els.betAmount.max) || STARTING_STACK;
@@ -307,7 +345,9 @@ function setBetAmount(value) {
   els.betAmount.value = normalized;
   els.betRange.value = normalized;
   els.betValue.textContent = `$${normalized}`;
+  if (els.amountReadout) els.amountReadout.textContent = `$${normalized}`;
 }
+
 
 function resetBustedStacks() {
   game.players.forEach((player) => {
@@ -363,6 +403,7 @@ function handleHumanAction(action) {
   const callAmount = legalCallAmount(player);
 
   if (action === "fold") {
+    toggleBetDrawer(false);
     player.folded = true;
     player.acted = true;
     player.lastAction = "Folded";
@@ -372,6 +413,7 @@ function handleHumanAction(action) {
   }
 
   if (action === "checkCall") {
+    toggleBetDrawer(false);
     commitChips(HUMAN_INDEX, callAmount);
     player.acted = true;
     player.lastAction = callAmount > 0 ? `Called $${callAmount}` : "Checked";
@@ -384,6 +426,7 @@ function handleHumanAction(action) {
   const targetBet = Number.parseInt(els.betAmount.value, 10);
   const result = betOrRaiseTo(HUMAN_INDEX, targetBet);
   if (result.ok) {
+    toggleBetDrawer(false);
     addLog(`You ${game.currentBet === player.committed ? "raise" : "bet"} to $${player.committed}.`);
     setDealerRatState(player.allIn ? "allIn" : "smug", 1400);
     advanceTurn();
@@ -614,7 +657,7 @@ function awardPot(winnerIndexes, message) {
   game.handInProgress = false;
   game.awaitingNextHand = true;
   game.street = "showdown";
-  game.message = "Hand complete. Start the next hand when ready.";
+  game.message = "Ready for the next hand.";
   setDealerRatState("happy");
   showBanner(message, winnerIndexes.includes(HUMAN_INDEX) ? "win" : "lose");
   render();
@@ -746,6 +789,9 @@ function compareScores(a, b) {
 }
 
 function render() {
+  document.body.classList.toggle("is-waiting", !game.handInProgress);
+  document.body.classList.toggle("is-human-turn", game.handInProgress && game.currentPlayer === HUMAN_INDEX);
+  document.body.classList.toggle("is-cpu-turn", game.handInProgress && game.currentPlayer !== null && game.currentPlayer !== HUMAN_INDEX);
   renderPlayers();
   renderCommunity();
   renderControls();
@@ -770,8 +816,9 @@ function renderPlayers() {
       const tableBadges = [
         index === game.dealerIndex ? `<span class="status-glyph dealer-glyph" aria-label="Dealer button">D</span>` : "",
         blindMarker ? `<span class="status-glyph blind-glyph" aria-label="${blindMarker === "SB" ? "Small blind" : "Big blind"}">${blindMarker}</span>` : "",
-        getStatusGlyph(state)
+        ["active", "folded", "all-in"].includes(state) ? getStatusGlyph(state) : ""
       ].filter(Boolean).join("");
+      const contextLabel = getOpponentContextLabel(player, index);
 
       els.seats[index].className = `player-panel opponent-pod seat ${seatClass(index)} seat-art-${index}${game.currentPlayer === index ? " is-turn" : ""}${player.folded ? " is-folded" : ""}`;
       els.seats[index].dataset.style = getCpuAggressionTone(player);
@@ -780,9 +827,9 @@ function renderPlayers() {
         <div class="opponent-meta">
           <span class="opponent-name">${player.name}</span>
           <span class="opponent-stack">$${player.stack}</span>
-          <span class="opponent-bet">$${player.committed}</span>
         </div>
         <div class="opponent-cards">${renderCard(null, true)}${renderCard(null, true)}</div>
+        ${contextLabel ? `<span class="opponent-action">${contextLabel}</span>` : ""}
         <div class="opponent-badges">${tableBadges}</div>
       `;
       return;
@@ -795,22 +842,39 @@ function renderPlayers() {
     if (player.allIn) badges.push(`<span class="badge status">All-in</span>`);
     if (player.folded) badges.push(`<span class="badge status">Fold</span>`);
 
-    els.seats[index].className = `player-panel seat ${seatClass(index)} seat-art-${index}${game.currentPlayer === index ? " is-turn" : ""}${player.folded ? " is-folded" : ""}`;
+    els.seats[index].className = `player-panel hero-hand-zone seat ${seatClass(index)} seat-art-${index}${game.currentPlayer === index ? " is-turn" : ""}${player.folded ? " is-folded" : ""}`;
     delete els.seats[index].dataset.style;
     delete els.seats[index].dataset.state;
+    const status = formatSeatStatus(player, getPlayerVisualState(player, index));
     els.seats[index].innerHTML = `
-      <div class="player-head">
-        <span class="player-name">${player.name}</span>
+      <div class="human-seat-label">
+        <span class="player-name">You</span>
         <span class="badge-row">${badges.join("")}</span>
       </div>
+      <div class="card-row hero-card-row">${cards || renderCard(null, true) + renderCard(null, true)}</div>
       <div class="player-stats">
-        <div><span>Stack</span><strong>$${player.stack}</strong></div>
-        <div><span>Bet</span><strong>$${player.committed}</strong></div>
-        <div><span>Status</span><strong>${player.lastAction}</strong></div>
+        <div class="hero-stack"><span>Stack</span><strong>$${player.stack}</strong></div>
+        ${player.committed > 0 ? `<div class="hero-bet"><span>Bet</span><strong>$${player.committed}</strong></div>` : ""}
+        ${status ? `<div class="hero-status"><span>Status</span><strong>${status}</strong></div>` : ""}
       </div>
-      <div class="card-row">${cards || renderCard(null, true) + renderCard(null, true)}</div>
     `;
   });
+}
+
+function getOpponentContextLabel(player, index) {
+  if (player.allIn) return "All-in";
+  if (player.folded) return "Fold";
+  if (game.currentPlayer === index) return "Thinking";
+  if (player.committed > 0) return `Bet $${player.committed}`;
+  return "";
+}
+
+function formatSeatStatus(player, state) {
+  if (player.allIn) return "All In";
+  if (player.folded) return "Folded";
+  if (state === "active") return "Thinking";
+  if (player.lastAction === "Waiting") return "";
+  return player.lastAction;
 }
 
 function getCpuAggressionTone(player) {
@@ -881,13 +945,23 @@ function renderControls() {
   const player = game.players[HUMAN_INDEX];
   const callAmount = legalCallAmount(player);
   const canBet = humanTurn && player.stack > callAmount;
+  const noHand = !game.handInProgress;
+  const waitingOnTable = game.handInProgress && !humanTurn;
+  els.actionBar.classList.toggle("no-hand-mode", noHand);
+  els.actionBar.classList.toggle("waiting-mode", waitingOnTable);
+  els.actionBar.classList.toggle("human-turn-mode", humanTurn);
+  els.actionBar.hidden = !humanTurn;
+  els.amountControl.hidden = noHand || waitingOnTable || !canBet;
+  els.primaryActions.hidden = noHand || waitingOnTable;
+  els.fold.hidden = !humanTurn;
+  els.checkCall.hidden = !humanTurn;
+  els.betRaise.hidden = !canBet;
   els.fold.disabled = !humanTurn;
   els.checkCall.disabled = !humanTurn;
   els.betRaise.disabled = !canBet;
   els.checkCall.textContent = callAmount > 0 ? `Call $${callAmount}` : "Check";
   els.checkCall.classList.toggle("call-mode", callAmount > 0);
   els.checkCall.classList.toggle("check-mode", callAmount === 0);
-  els.betRaise.textContent = game.currentBet > 0 ? "Raise" : "Bet";
   els.betLabel.textContent = game.currentBet > 0 ? "Raise To" : "Bet Amount";
 
   const minimum = game.currentBet > 0 ? game.currentBet + game.minRaise : game.bigBlind;
@@ -899,15 +973,24 @@ function renderControls() {
   els.betRange.max = maximum;
   els.betRange.step = game.bigBlind;
   setBetAmount(Number(els.betAmount.value) < minimum ? minimum : Number(els.betAmount.value));
+  const targetAmount = Number.parseInt(els.betAmount.value, 10);
+  els.betRaise.textContent = game.currentBet > 0 ? `Raise To $${targetAmount}` : `Bet $${targetAmount}`;
   els.betMinus.disabled = !canBet || Number(els.betAmount.value) <= minimum;
   els.betPlus.disabled = !canBet || Number(els.betAmount.value) >= maximum;
   els.betRange.disabled = !canBet;
+  els.betPresets.forEach((button) => {
+    button.disabled = !canBet;
+  });
+  if (!canBet) toggleBetDrawer(false);
 
-  els.newHand.textContent = game.awaitingNextHand ? "Next Hand" : "New Hand";
-  els.actionTitle.textContent = humanTurn ? "Your action" : game.handInProgress ? "Rats are thinking" : "No hand in progress";
+  const dealLabel = game.awaitingNextHand ? "Next Hand" : "Deal Hand";
+  els.newHand.textContent = dealLabel;
+  els.actionTitle.textContent = humanTurn ? "Your action" : game.handInProgress ? "Rats are thinking" : "";
   els.actionDetail.textContent = humanTurn
     ? `Current bet $${game.currentBet}. You have committed $${player.committed}.`
-    : game.message;
+    : game.handInProgress
+      ? game.message
+      : "";
 }
 
 function showBanner(message, type = "neutral") {
@@ -974,7 +1057,7 @@ function addLog(entry) {
 
 function playerUiLabel(index) {
   if (index === HUMAN_INDEX) return "You";
-  return `Opponent ${index}`;
+  return game.players[index]?.name || `Seat ${index}`;
 }
 
 function formatCard(card) {
@@ -990,8 +1073,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('service-worker.js')
-      .then(() => console.log('Service Worker registered'))
-      .catch(() => console.warn('Service Worker registration failed'));
+      .catch(() => {});
   });
 }
 

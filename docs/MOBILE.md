@@ -1,20 +1,21 @@
 # Mobile App Migration
 
-River Rat Poker is a static HTML/CSS/JavaScript game, so the first native mobile path is Capacitor rather than Expo. Capacitor can package the existing `dist/` build in an iOS WebView while the game UI and poker engine continue to live in the web codebase.
+River Rat Poker is now mobile-app-first. The shipped app path is Capacitor packaging the shared HTML/CSS/JavaScript game layer into a native iOS WebView from `dist/`.
 
 ## Current Stack
 
-- Runtime: static browser app.
-- Source files: `index.html`, `style.css`, `script.js`, and `assets/`.
-- Local server: `npm run dev`, backed by `scripts/dev-server.mjs`.
-- Production/mobile web output: `npm run build`, backed by `scripts/prepare-pages.mjs`, which copies the app into `dist/`.
-- Native wrapper: Capacitor, configured by `capacitor.config.json`.
+- App shell: Capacitor, configured by `capacitor.config.json`.
+- Current native target: tracked `ios/` project.
+- Shared game source: `index.html`, `style.css`, `premium-ui.css`, `script.js`, and `assets/`.
+- Local iteration: `npm run dev`, backed by `scripts/dev-server.mjs`.
+- Packaged web layer: `npm run build`, backed by `scripts/prepare-pages.mjs`, which copies the app into `dist/`.
+- Native sync: `npm run native:prepare:ios`.
 
-## Why Capacitor First
+## Why Capacitor
 
-Capacitor is the right first fit because the project already has a working web game, relative asset paths, a PWA manifest, safe-area viewport settings, and mobile-responsive CSS. Expo/React Native would require a much larger UI rewrite before the game could run natively.
+Capacitor is the right fit because the shared game layer already uses relative asset paths, PWA metadata, safe-area viewport settings, and mobile landscape CSS. The native app should package that source of truth instead of maintaining a second game UI or rules engine.
 
-## iOS Setup
+## iOS Workflow
 
 Prerequisites on macOS:
 
@@ -23,45 +24,41 @@ Prerequisites on macOS:
 - Xcode command line tools installed with `xcode-select --install`.
 - CocoaPods if Capacitor prompts for it: `sudo gem install cocoapods`.
 
-First-time setup:
+After pulling changes:
 
 ```bash
 npm install
-npm run native:add:ios
-npm run native:open:ios
-```
-
-Day-to-day iOS rebuild after web changes:
-
-```bash
 npm run native:prepare:ios
 npm run native:open:ios
 ```
 
-`native:add:ios` generates the `ios/` native app target. Commit that generated folder once it has been created and opened successfully in Xcode.
+Day-to-day after web source edits:
 
-## Mobile Responsiveness Audit
+```bash
+npm run native:prepare:ios
+```
 
-The current UI already includes the main pieces needed for a playable mobile first pass:
+This rebuilds `dist/` and syncs it into the iOS project.
+
+## Mobile UX Baseline
+
+The mobile app is optimized around landscape phone play:
 
 - `viewport-fit=cover` is set in `index.html` for iPhone safe areas.
-- `style.css` uses `svh` units and `env(safe-area-inset-*)` padding.
-- The action bar becomes sticky/fixed on mobile so the main poker actions stay reachable.
-- Portrait and landscape breakpoints exist under `900px`, `620px`, and landscape-specific rules.
-- Table settings and hand log collapse behind icon buttons on small screens.
+- `premium-ui.css` reserves a bottom human player controller zone.
+- The poker table is scaled down for short landscape viewports.
+- Human hole cards remain visible during decisions.
+- The action dock only appears when the human player can act.
+- Fold, Check/Call, and Bet/Raise labels include the current money context.
+- Bet sizing defaults to a compact +/- control with optional presets.
 
-First-screen items to keep testing on real devices:
-
-- Seat overlap on narrow iPhones after several betting states.
-- Fixed action bar height when the browser/WebView keyboard or system gesture area is visible.
-- Dealer and community card spacing at 320-390px wide.
-- Touch target comfort for the bet slider and +/- controls.
+Keep validating at 844x390, 852x393, and 932x430 landscape sizes, plus real iPhone devices through Xcode.
 
 ## Mobile-Safe Build Shape
 
-The native app should always package `dist/`, not the source root. Run `npm run build` before every Capacitor sync so `index.html`, `style.css`, `script.js`, `manifest.json`, `offline.html`, `service-worker.js`, and `assets/` are copied together.
+The native app should always package `dist/`, not the source root. Run `npm run build` or `npm run native:prepare:ios` before native testing so `index.html`, CSS, `script.js`, `manifest.json`, `offline.html`, `service-worker.js`, and `assets/` are copied together.
 
-The app uses relative asset paths. Keep new references relative, for example `assets/cards/Card_Back.png` or `./offline.html`, so the same files work on GitHub Pages and inside the Capacitor WebView.
+The app uses relative asset paths. Keep new references relative, for example `assets/cards/Card_Back.png` or `./offline.html`, so the same files work in local preview, GitHub Pages preview, and the Capacitor WebView.
 
 ## Fake-Money Guardrail
 

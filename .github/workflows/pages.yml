@@ -1,4 +1,4 @@
-name: Deploy GitHub Pages
+name: Deploy Mobile App Preview
 
 on:
   push:
@@ -30,16 +30,16 @@ jobs:
         with:
           node-version: 22
 
-      - name: Test static app
+      - name: Test mobile app source
         run: npm test
 
-      - name: Prepare static site
+      - name: Build mobile app web layer
         run: npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload static site
+      - name: Upload mobile preview artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist

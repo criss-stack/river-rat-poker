@@ -5,24 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>River Rat Poker</title>
     <link rel="stylesheet" href="style.css?v=20260626-mobile-minimal" />
-    <link rel="stylesheet" href="premium-ui.css?v=20260626-premium-mobile" />
+    <link rel="stylesheet" href="premium-ui.css?v=20260821-mobile-first" />
 
     <!-- PWA & mobile install -->
     <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#16776f" />
+    <meta name="theme-color" content="#28170f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="apple-touch-icon" href="assets/dealer_rat/Rat_Happy.png" />
   </head>
   <body>
     <main class="game-shell">
-      <header class="top-bar">
-        <div>
-          <p class="eyebrow">Rat-world casino hold'em</p>
+      <header class="top-bar" aria-label="Game HUD">
+        <div class="brand-lockup">
+          <p class="eyebrow">Bayou Table 7</p>
           <h1>River Rat Poker</h1>
         </div>
         <div class="top-actions">
           <button id="settings-toggle" class="icon-button" aria-expanded="false" aria-controls="settings-panel" title="Settings">⚙</button>
-          <button id="new-hand-btn" class="wood-button">New Hand</button>
+          <button id="new-hand-btn" class="wood-button">Deal Hand</button>
         </div>
       </header>
 
@@ -37,7 +37,6 @@
 
         <div class="dealer-character" aria-label="House dealer">
           <img id="dealer-rat" src="assets/dealer_rat/Rat_Idle.png" alt="Idle rat dealer shuffling cards" />
-          <span>House Dealer</span>
         </div>
 
         <div class="poker-table">
@@ -58,30 +57,39 @@
               <img src="assets/chips/Chip_100.png" alt="$100 black crest chip" />
               <img src="assets/chips/Chip_500.png" alt="$500 royal rat chip" />
             </div>
-            <div id="turn-info" class="turn-info">Press New Hand to sit down.</div>
+            <div id="turn-info" class="turn-info">Ready to deal</div>
           </div>
         </div>
       </section>
 
-      <section class="action-bar" aria-label="Player actions">
+      <section id="action-dock" class="action-bar" aria-label="Player actions">
         <div class="action-summary">
           <strong id="action-title">No hand in progress</strong>
           <span id="action-detail">Stacks persist between hands. Blinds apply when a new hand starts.</span>
           <button id="log-toggle" class="icon-button" aria-expanded="false" aria-controls="log-panel" title="Hand Log">≡</button>
         </div>
-        <div class="amount-control" aria-label="Bet amount">
-          <div class="amount-head">
+        <div id="amount-control" class="amount-control" aria-label="Bet amount">
+          <button id="bet-drawer-toggle" class="amount-head" type="button" aria-expanded="false" aria-controls="bet-drawer">
             <label for="bet-range" id="bet-label">Bet / Raise To</label>
             <strong id="bet-value">$20</strong>
-          </div>
+          </button>
           <input id="bet-amount" type="hidden" min="0" step="5" value="20" />
-          <div class="amount-stepper">
+          <div class="amount-stepper" aria-label="Adjust bet amount">
             <button id="bet-minus" type="button" aria-label="Decrease bet amount">-</button>
-            <input id="bet-range" type="range" min="0" max="1000" step="5" value="20" />
+            <span id="amount-readout" class="amount-readout" aria-hidden="true">$20</span>
             <button id="bet-plus" type="button" aria-label="Increase bet amount">+</button>
           </div>
+          <div id="bet-drawer" class="bet-drawer" hidden>
+            <input id="bet-range" type="range" min="0" max="1000" step="5" value="20" />
+            <div class="bet-presets" aria-label="Quick bet sizes">
+              <button type="button" data-bet-preset="0.5">1/2 Pot</button>
+              <button type="button" data-bet-preset="0.75">3/4 Pot</button>
+              <button type="button" data-bet-preset="1">Pot</button>
+              <button type="button" data-bet-preset="all-in">All In</button>
+            </div>
+          </div>
         </div>
-        <div class="actions">
+        <div id="primary-actions" class="actions">
           <button id="fold-btn">Fold</button>
           <button id="check-call-btn">Check</button>
           <button id="bet-raise-btn">Bet</button>

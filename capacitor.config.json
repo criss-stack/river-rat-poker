@@ -2,7 +2,6 @@
   "appId": "com.criss.riverrat",
   "appName": "River Rat Poker",
   "webDir": "dist",
-  "bundledWebRuntime": false,
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 3000,
